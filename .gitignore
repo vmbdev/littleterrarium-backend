@@ -1,0 +1,8 @@
+/build/
+/node_modules/
+/public/
+/temp/
+.env
+/prisma/migrations/
+/utils/res/
+littleterrarium.config.ts

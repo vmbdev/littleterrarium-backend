@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["extendedWhereUnique"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int        @id @default(autoincrement())
+  username      String     @db.VarChar(32)     @unique
+  firstname     String?    @db.VarChar(50)
+  lastname      String?    @db.VarChar(50)
+  password      String     @db.Char(60)
+  email         String     @db.VarChar(120)    @unique
+  bio           String?     @db.VarChar(240)
+  avatar        Json?
+  preferences   Json?
+  role          Role       @default(USER)
+  locations     Location[]
+  plants        Plant[]
+  photos        Photo[]
+  notifications Notification[]
+  public        Boolean    @default(false)
+  status        UserStatus @default(UNVERIFIED)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  UNVERIFIED
+  VERIFIED
+  BANNED
+}
+
+model Session {
+  id          String   @id
+  sid         String   @unique
+  data        String
+  expiresAt   DateTime
+}
+
+model Location {
+  id          Int        @id @default(autoincrement())
+  name        String
+  pictures    Json?
+  light       Light
+  public      Boolean    @default(false)
+  plants      Plant[]
+  owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId     Int
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+enum Light {
+  FULLSUN
+  PARTIALSUN
+  SHADE
+}
+
+model Plant {
+  id          Int         @id @default(autoincrement())
+  specie      Specie?     @relation(fields: [specieId], references: [id], onDelete: SetNull)
+  specieId    Int?
+  customName  String?
+  description String?
+  condition   Condition?
+  waterFreq   Int?
+  waterLast   DateTime?
+  waterNext   DateTime?
+  fertFreq    Int?
+  fertLast    DateTime?
+  fertType    String?
+  fertNext    DateTime?
+  potType     String?
+  potSize     Int?
+  soil        String?
+  photos      Photo[]
+  notifications Notification[]
+  public      Boolean    @default(false)
+  location    Location   @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  locationId  Int
+  owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId     Int
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+enum Condition {
+  BAD
+  POOR
+  GOOD
+  VERYGOOD
+  EXCELLENT
+}
+
+model Hash {
+  id          Int        @id @default(autoincrement())
+  hash        String     @unique
+  references  Int        @default(1)
+  photos      Photo[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Photo {
+  id          Int        @id @default(autoincrement())
+  images      Json
+  description String?
+  public      Boolean    @default(false)
+  takenAt     DateTime   @default(now())
+  hash        Hash       @relation(fields: [hashId], references: [id], onDelete: Cascade)
+  hashId      Int
+  plant       Plant      @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  plantId     Int
+  owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId     Int
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Specie {
+  id          Int        @id @default(autoincrement()) 
+  family      String
+  name        String
+  commonName  String?
+  care        Json?
+  plants      Plant[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Notification {
+  id          Int       @id @default(autoincrement())
+  type        NotificationType
+  read        DateTime?
+  content     Json
+  plant       Plant      @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  plantId     Int
+  owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId     Int
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([plantId, type], name: "plantCare")
+}
+
+// water -> { plantId, date }
+// fert -> { plantId, date }
+// comment -> to define
+enum NotificationType {
+  WATER
+  FERTILIZER
+  COMMENT
+}
