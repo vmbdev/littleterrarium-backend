@@ -147,10 +147,11 @@ const findOne: RequestHandler = async (req, res, next) => {
   if (plant) {
     if (plant.ownerId === req.auth.userId) res.send(plant);
     else if ((plant.ownerId !== req.auth.userId) && plant.public) {
-      // FIXME: remove photos that are private
-      // if (plant.photos) plant.photos = plant.photos.filter((photo: Photo) => photo.public);
+      // FIXME: extremely inelegant, but Prisma doesn't add relations to interfaces so we can't access plant.photos
+      const anyPlant = plant as any;
+      if (anyPlant.photos) anyPlant.photos = anyPlant.photos.filter((photo: Photo) => photo.public);
 
-      res.send(plant);
+      res.send(anyPlant);
     }
     else return next({ code: 403 });
   }
@@ -267,6 +268,7 @@ const modify: RequestHandler = async (req, res, next) => {
  * @param {Express.NextFunction} next 
  */
 const remove: RequestHandler = async (req, res, next) => {
+  // FIXME: update photo hash references
   const plant = await prisma.plant.delete({ where: { id: req.parser.id, ownerId: req.auth.userId } });
 
   if (plant) res.send({ msg: 'PLANT_REMOVED' });

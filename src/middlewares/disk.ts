@@ -4,7 +4,7 @@
  * the file there. Then, it creates req.disk for the next middleware to know.
  */
 
-import { Request, Response, NextFunction } from 'express';
+import { RequestHandler, Request, Response, NextFunction } from 'express';
 import FileSystem, { LocalFile } from '../helpers/filesystem';
 
 declare global {
@@ -20,11 +20,23 @@ declare global {
   }
 }
 
-const processFile = async (file: Express.Multer.File) => {
+export const generateDisk: RequestHandler = (req, res, next) => {
+  req.disk = {};
+
+  next();
+}
+
+const processFile = async (file: Express.Multer.File, protocol?: string, host?: string) => {
   const diskFile: LocalFile = await FileSystem.saveFile(file.path);
   diskFile.fieldname = file.fieldname;
   diskFile.mimetype = file.mimetype;
   diskFile.size = file.size;
+
+  diskFile.url = {
+    full: `${protocol}://${host}/${diskFile.path.full}`,
+    mid: `${protocol}://${host}/${diskFile.path.mid}`,
+    thumb: `${protocol}://${host}/${diskFile.path.thumb}`
+  }
 
   return diskFile;
 }
@@ -32,13 +44,7 @@ const processFile = async (file: Express.Multer.File) => {
 export const image = async (req: Request, res: Response, next: NextFunction) => {
   if (req.file) {
     try {
-      req.disk.file = await processFile(req.file);
-      req.disk.file.url = {};
-
-      for (const size of Object.keys(req.disk.file.path)) {
-        req.disk.file.url[size] = `${req.protocol}://${req.get('host')}/${req.disk.file.path[size]}`;
-      }
-
+      req.disk.file = await processFile(req.file, req.protocol, req.get('host'));
     } catch (err: any) {
       if (err.error && (err.error === 'IMG_NOT_VALID')) return next({ error: err.error });
       else return next({ code: 500 });
@@ -54,14 +60,7 @@ export const gallery = async (req: Request, res: Response, next: NextFunction) =
 
     for (const file in req.files) {
       try {
-        const diskFile = await processFile((req.files as any)[file]);
-
-        for (const size of Object.keys(diskFile.path)) {
-          if (diskFile.url) {
-            diskFile.url[size] = `${req.protocol}://${req.get('host')}/${diskFile.path[size]}`;
-          }
-        }
-
+        const diskFile = await processFile((req.files as any)[file], req.protocol, req.get('host'));
         req.disk.files.push(diskFile);
       } catch (err: any) {
         if (err.error && (err.error === 'IMG_NOT_VALID')) return next({ error: err.error });

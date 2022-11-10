@@ -133,10 +133,12 @@ const findOne: RequestHandler = async (req, res, next) => {
   if (location) {
     if (location.ownerId === req.auth.userId) res.send(location);
     else if ((location.ownerId !== req.auth.userId) && location.public) {
-      //FIXME: remove plants that are private
-      // if (location.plants) location.plants = location.plants.filter((plant: Plant) => plant.public);
+      // FIXME: extremely inelegant, but Prisma doesn't add relations to interfaces so we can't access location.plants
+      const anyLocation = location as any;
 
-      res.send(location);
+      if (anyLocation.plants) anyLocation.plants = anyLocation.plants.filter((plant: Plant) => plant.public);
+
+      res.send(anyLocation);
     }
     else return next({ code: 403 });
   }
@@ -160,8 +162,7 @@ const modify: RequestHandler = async (req, res, next) => {
   if (req.disk) data.pictures = req.disk.file.url;
 
   // it's already checked by auth.checkOwnership, but just to be extra paranoid
-  // we add it to the where clause
-  // req.auth.userId is authorised by auth middleware
+  // we add it to the where clause req.auth.userId is authorised by auth middleware
   const location = await prisma.location.update({
     where: {
       id: req.parser.id,

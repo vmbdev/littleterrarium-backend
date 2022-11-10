@@ -12,6 +12,7 @@ import errorHandling from './middlewares/errorhandling';
 import { generateAuth } from './middlewares/auth';
 import { generateParser } from './middlewares/parser';
 import { server as serverConfig } from '../littleterrarium.config';
+import { generateDisk } from './middlewares/disk';
 
 const app: Express = express();
 
@@ -52,7 +53,7 @@ app.use(
     )
   })
 );
-app.use('/*', generateAuth, generateParser);
+app.use('/*', generateAuth, generateParser, generateDisk);;
 app.use('/api', apiRoutes);
 app.use('/public', express.static('public'));
 app.use('/', express.static('dist/littleterrarium'));

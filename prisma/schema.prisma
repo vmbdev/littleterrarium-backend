@@ -106,6 +106,7 @@ model Hash {
   id          Int        @id @default(autoincrement())
   hash        String     @unique
   references  Int        @default(1)
+  localPath   Json
   photos      Photo[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt

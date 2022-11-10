@@ -1,6 +1,8 @@
 import { RequestHandler } from 'express';
+import { files as configFiles } from '../../littleterrarium.config';
 import prisma from "../prismainstance";
 import filesystem from '../helpers/filesystem';
+import path from 'path';
 
 const create: RequestHandler = (req, res, next) => {
   if (!req.disk.files || (req.disk.files.length === 0)) return next({ error: 'PHOTO_NOT_FOUND' });
@@ -24,7 +26,7 @@ const create: RequestHandler = (req, res, next) => {
     const currentData = { ...data };
     currentData.images = file.url;
 
-    // on both update or insert, we always create the picture
+    // on both update or insert, we always create an entry in Photos
     return prisma.hash.upsert({
       where: { hash: file.hash },
       update: {
@@ -33,6 +35,7 @@ const create: RequestHandler = (req, res, next) => {
       },
       create: {
         hash: file.hash,
+        localPath: file.path,
         photos: { create: currentData }
       }
     });
@@ -110,7 +113,7 @@ const modify: RequestHandler = async (req, res, next) => {
 
 const remove: RequestHandler = async (req, res, next) => {
   try {
-    const { hashId, images } = await prisma.photo.delete({
+    const { hashId } = await prisma.photo.delete({
       where: {
         id: req.parser.id,
         ownerId: req.auth.userId
@@ -118,19 +121,28 @@ const remove: RequestHandler = async (req, res, next) => {
     });
 
     // no need to check for ownerId as we checked above
-    // yeah, we update and sometimes we delete
+    // yeah, we update the reference and then we check if it's zero to delete
     // it's still possibly less operations than check and update/check and delete
     const { references } = await prisma.hash.update({
       where: { id: hashId },
       data: { references: { decrement: 1 } }
     });
 
+    // if there are no references left, we remove the Hash entry and the files
     if (references === 0) {
-      await prisma.hash.delete({ where: { id: hashId } });
+      const { localPath } = await prisma.hash.delete({ where: { id: hashId } });
 
-      for await (const image of images as any[]) {
-        await filesystem.removeFile(image);
+      const files: any[] = Object.values(localPath as any);
+      for (const file of files) {
+        await filesystem.removeFile(file);
       }
+
+      // if (files.length > 0) {
+      //   const dir: string[] = path.dirname(files[0]).split('/');
+      //   const data: string = dir.slice(0, dir.length - configFiles.folder.division + 1).join('/');
+
+      //   filesystem.removeDir(data);
+      // }
     }
 
     res.send({ msg: 'PHOTO_REMOVED' });

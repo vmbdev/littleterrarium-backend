@@ -23,7 +23,7 @@ export const generateAuth: RequestHandler = (req, res, next) => {
     : req.session.userId
   );
 
-  return next();
+  next();
 }
 
 // only allow if it's signed in, and if the data modifying is his/her or if he/she's an admin
@@ -48,6 +48,42 @@ export const signedIn: RequestHandler = (req, res, next) => {
   next();
 }
 
+
+/**
+ * Given a model name, returns the respective prisma delegate.
+ * I really hate this, as it's unscalable, but it works until
+ * I find a workaround for TypeScript. 
+ * @param {string} model - The name of the model.
+ * @returns {any} - The delegate object for the model.
+ */
+export const getModelDelegate = (model: string): any => {
+  let prismaDelegate;
+
+  switch(model) {
+    case 'user':
+      prismaDelegate = prisma.user;
+      break;
+    case 'location':
+      prismaDelegate = prisma.location;
+      break;
+    case 'plant':
+      prismaDelegate = prisma.plant;
+      break;
+    case 'photo':
+      prismaDelegate = prisma.photo;
+      break;
+    case 'specie':
+      prismaDelegate = prisma.specie;
+      break;
+    case 'notification':
+      prismaDelegate = prisma.notification;
+      break;
+  }
+
+  return prismaDelegate;
+}
+
+
 /**
  * Checks if the related object is owned by the same user.
  * This prevents an user creating something like a plant in a location not owned.
@@ -58,23 +94,23 @@ export const signedIn: RequestHandler = (req, res, next) => {
 export const checkRelationship = (model: string, idField: string) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     let id;
+    const prismaDelegate = getModelDelegate(model);
 
     if ((req.method === 'PUT') || (req.method === 'POST') && req.body[idField]) id = +req.body[idField];
     else id = +req.params[idField];
 
-    // TODO: fix model detection
-    // if (prisma[model] && id) {
-    //   try {
-    //     await prisma[model].findFirstOrThrow({
-    //       where: {
-    //         id,
-    //         ownerId: req.auth.userId
-    //       }
-    //     });
-    //   } catch (err) {
-    //     return next({ code: 403 });
-    //   }
-    // }
+    if (prismaDelegate && id) {
+      try {
+        await prismaDelegate.findFirstOrThrow({
+          where: {
+            id,
+            ownerId: req.auth.userId
+          }
+        });
+      } catch (err) {
+        return next({ code: 403 });
+      }
+    }
 
     next();
   }
@@ -88,23 +124,23 @@ export const checkRelationship = (model: string, idField: string) => {
 export const checkOwnership = (model: string) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     let id;
+    const prismaDelegate = getModelDelegate(model);
 
     if ((req.method === 'PUT') || (req.method === 'POST') && req.body.id) id = +req.body.id;
     else id = +req.params.id;
 
-    // TODO: fix model detection
-    // if (prisma[model] && id) {
-    //   try {
-    //     await prisma[model].findFirstOrThrow({
-    //       where: {
-    //         id,
-    //         ownerId: req.auth.userId
-    //       }
-    //     });
-    //   } catch (err) {
-    //     return next({ code: 403 });
-    //   }
-    // }
+    if (prismaDelegate && id) {
+      try {
+        await prismaDelegate.findFirstOrThrow({
+          where: {
+            id,
+            ownerId: req.auth.userId
+          }
+        });
+      } catch (err) {
+        return next({ code: 403 });
+      }
+    }
 
     next();
   }

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { mkdir, rename, readFile, unlink } from 'node:fs/promises';
+import { mkdir, rename, readFile, unlink, rm } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
 import { files } from '../../littleterrarium.config';
@@ -92,12 +92,15 @@ export const createDirectories = async (hash: string) => {
   };
 }
 
-// TODO: remove trailing directories
 export const removeFile = (filePath: string): Promise<void> => {
   return unlink(filePath);
 }
 
-export const getImageExt = async (filePath: string) => {
+export const removeDir = (dirPath: string): Promise<void> => {
+  return rm(dirPath, { recursive: true, force: true });
+}
+
+export const getImageExt = async (filePath: string): Promise<string | undefined> => {
   const img = sharp(filePath);
   let metadata;
 
@@ -115,5 +118,6 @@ export default {
   saveFile,
   createDirectories,
   removeFile,
+  removeDir,
   getImageExt
 };
