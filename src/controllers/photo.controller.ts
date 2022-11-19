@@ -4,7 +4,7 @@ import prisma from "../prismainstance";
 import filesystem from '../helpers/filesystem';
 import path from 'path';
 
-const create: RequestHandler = (req, res, next) => {
+const create: RequestHandler = async (req, res, next) => {
   if (!req.disk.files || (req.disk.files.length === 0)) return next({ error: 'PHOTO_NOT_FOUND' });
 
   const data: any = {};
@@ -41,7 +41,7 @@ const create: RequestHandler = (req, res, next) => {
     });
   });
 
-  prisma.$transaction(ops);
+  await prisma.$transaction(ops);
   res.send({ msg: 'PHOTOS_CREATED' });
 }
 
@@ -70,7 +70,7 @@ const find: RequestHandler = async (req, res, next) => {
 const findOne: RequestHandler = async (req, res, next) => {
   const query = {
     where: { id: req.parser.id },
-    select: { id: true, images: true, description: true, public: true, ownerId: true, takenAt: true }
+    select: { id: true, images: true, description: true, public: true, ownerId: true, plantId: true, takenAt: true }
   };
 
   const photo = await prisma.photo.findUnique(query);

@@ -1,4 +1,4 @@
-import { ErrorRequestHandler, Request, Response, NextFunction } from 'express';
+import { ErrorRequestHandler } from 'express';
 
 const defaultMessages: { [key: number]: string } = {
   401: 'UNAUTHENTICATED',

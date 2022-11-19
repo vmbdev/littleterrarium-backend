@@ -1,5 +1,5 @@
 import type { RequestHandler } from 'express';
-import { Prisma, Condition, Photo } from '@prisma/client'
+import { Condition, Photo } from '@prisma/client'
 import prisma from '../prismainstance';
 import dayjs from 'dayjs';
 
@@ -7,10 +7,10 @@ import dayjs from 'dayjs';
  * Express Middleware that creates a Plant object in the database.
  * Even though we receive a Plant-like object, we specify which properties are allowed to be stored
  * and check each of them for security sake.
- * 
- * @param {Express.Request} req 
- * @param {Express.Response} res 
- * @param {Express.NextFunction} next 
+ *
+ * @param {Express.Request} req
+ * @param {Express.Response} res
+ * @param {Express.NextFunction} next
  */
 const create : RequestHandler = async (req, res, next) => {
     const requiredFields = ['locationId'];
@@ -88,9 +88,9 @@ const create : RequestHandler = async (req, res, next) => {
 /**
  * Express Middleware to request a list of Plant objects optionally filtered by locationId.
  * The object contains one Photo object as well as the Specie object related to it.
- * @param {Express.Request} req 
- * @param {Express.Response} res 
- * @param {Express.NextFunction} next 
+ * @param {Express.Request} req
+ * @param {Express.Response} res
+ * @param {Express.NextFunction} next
  */
 const find : RequestHandler = async (req, res, next) => {
   const query: any = {};
@@ -128,10 +128,11 @@ const find : RequestHandler = async (req, res, next) => {
 
 /**
  * Express Middleware to request a Plant object by id.
- * The object contains all of the Photo objects linked to the plant, as well as its Specie object.
- * @param {Express.Request} req 
- * @param {Express.Response} res 
- * @param {Express.NextFunction} next 
+ * The object contains all of the Photo objects linked to the plant, as well
+ * as its Specie object.
+ * @param {Express.Request} req
+ * @param {Express.Response} res
+ * @param {Express.NextFunction} next
  */
 const findOne: RequestHandler = async (req, res, next) => {
   const query: any = {
@@ -147,8 +148,10 @@ const findOne: RequestHandler = async (req, res, next) => {
   if (plant) {
     if (plant.ownerId === req.auth.userId) res.send(plant);
     else if ((plant.ownerId !== req.auth.userId) && plant.public) {
-      // FIXME: extremely inelegant, but Prisma doesn't add relations to interfaces so we can't access plant.photos
+      // FIXME: extremely inelegant, but Prisma doesn't add relations to
+      // interfaces in TypeScript so we can't access plant.photos
       const anyPlant = plant as any;
+
       if (anyPlant.photos) anyPlant.photos = anyPlant.photos.filter((photo: Photo) => photo.public);
 
       res.send(anyPlant);
@@ -161,9 +164,9 @@ const findOne: RequestHandler = async (req, res, next) => {
 /**
  * Express Middleware to update an existing Plant object by id.
  * Like when creating, we manually introduce the fields in the final object.
- * @param {Express.Request} req 
- * @param {Express.Response} res 
- * @param {Express.NextFunction} next 
+ * @param {Express.Request} req
+ * @param {Express.Response} res
+ * @param {Express.NextFunction} next
  */
 const modify: RequestHandler = async (req, res, next) => {
   const fields = [
@@ -262,10 +265,10 @@ const modify: RequestHandler = async (req, res, next) => {
 
 /**
  * Remove a Plant object by its id.
- * 
- * @param {Express.Request} req 
- * @param {Express.Response} res 
- * @param {Express.NextFunction} next 
+ *
+ * @param {Express.Request} req
+ * @param {Express.Response} res
+ * @param {Express.NextFunction} next
  */
 const remove: RequestHandler = async (req, res, next) => {
   // FIXME: update photo hash references

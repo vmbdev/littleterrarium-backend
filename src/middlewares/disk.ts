@@ -32,10 +32,12 @@ const processFile = async (file: Express.Multer.File, protocol?: string, host?: 
   diskFile.mimetype = file.mimetype;
   diskFile.size = file.size;
 
-  diskFile.url = {
-    full: `${protocol}://${host}/${diskFile.path.full}`,
-    mid: `${protocol}://${host}/${diskFile.path.mid}`,
-    thumb: `${protocol}://${host}/${diskFile.path.thumb}`
+  if (protocol && host) {
+    diskFile.url = {
+      full: `${protocol}://${host}/${diskFile.path.full}`,
+      mid: `${protocol}://${host}/${diskFile.path.mid}`,
+      thumb: `${protocol}://${host}/${diskFile.path.thumb}`
+    }
   }
 
   return diskFile;

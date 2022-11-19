@@ -1,5 +1,5 @@
 import { RequestHandler } from 'express';
-import { Light, Location, Plant } from '@prisma/client';
+import { Prisma, Light, Location, Plant } from '@prisma/client';
 import prisma from '../prismainstance';
 
 // FIXME: if several users upload the same picture and one deletes it, there's no way to know if it's the last copy
@@ -34,7 +34,7 @@ const create: RequestHandler = async (req, res, next) => {
   }
 
   // if picture
-  if (req.disk) data.pictures = req.disk.file.url;
+  if (req.disk.file) data.pictures = req.disk.file.url;
 
   data.ownerId = req.auth.userId;
   try {
@@ -146,7 +146,7 @@ const findOne: RequestHandler = async (req, res, next) => {
 }
 
 const modify: RequestHandler = async (req, res, next) => {
-  const fields = ['name', 'pictures', 'light', 'public'];
+  const fields = ['name', 'light', 'public'];
   const data: any = {};
 
   for (const requestedField of Object.keys(req.body)) {
@@ -158,8 +158,9 @@ const modify: RequestHandler = async (req, res, next) => {
     }
   }
 
-  // if picture
-  if (req.disk) data.pictures = req.disk.file.url;
+  // picture
+  if (req.body.removePicture) data.pictures = Prisma.JsonNull;
+  else if (req.disk.file) data.pictures = req.disk.file.url;
 
   // it's already checked by auth.checkOwnership, but just to be extra paranoid
   // we add it to the where clause req.auth.userId is authorised by auth middleware
