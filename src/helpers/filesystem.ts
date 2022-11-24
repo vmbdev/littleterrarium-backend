@@ -96,8 +96,8 @@ export const removeFile = (filePath: string): Promise<void> => {
   return unlink(filePath);
 }
 
-export const removeDir = (dirPath: string): Promise<void> => {
-  return rm(dirPath, { recursive: true, force: true });
+export const removeDir = async (dirPath: string): Promise<void> => {
+  return await rm(dirPath, { recursive: true, force: true });
 }
 
 export const getImageExt = async (filePath: string): Promise<string | undefined> => {

@@ -23,24 +23,24 @@ const create: RequestHandler = async (req, res, next) => {
   }
 
   const ops = req.disk.files.map((file) => {
-    const currentData = { ...data };
-    currentData.images = file.url;
-
+    const photoData = { ...data };
+    photoData.images = file.url;
+    
     // on both update or insert, we always create an entry in Photos
     return prisma.hash.upsert({
       where: { hash: file.hash },
       update: {
         references: { increment: 1 },
-        photos: { create: currentData }
+        photos: { create: photoData }
       },
       create: {
         hash: file.hash,
         localPath: file.path,
-        photos: { create: currentData }
+        photos: { create: photoData }
       }
     });
   });
-
+  
   await prisma.$transaction(ops);
   res.send({ msg: 'PHOTOS_CREATED' });
 }
@@ -137,11 +137,12 @@ const remove: RequestHandler = async (req, res, next) => {
         await filesystem.removeFile(file);
       }
 
+      //TODO: make it so it doesn't obliterate everything else in the directories
       // if (files.length > 0) {
       //   const dir: string[] = path.dirname(files[0]).split('/');
       //   const data: string = dir.slice(0, dir.length - configFiles.folder.division + 1).join('/');
 
-      //   filesystem.removeDir(data);
+      //   await filesystem.removeDir(data);
       // }
     }
 

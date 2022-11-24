@@ -148,13 +148,14 @@ const findOne: RequestHandler = async (req, res, next) => {
   if (plant) {
     if (plant.ownerId === req.auth.userId) res.send(plant);
     else if ((plant.ownerId !== req.auth.userId) && plant.public) {
-      // FIXME: extremely inelegant, but Prisma doesn't add relations to
-      // interfaces in TypeScript so we can't access plant.photos
-      const anyPlant = plant as any;
+      // extremely inelegant, but Prisma doesn't add relations to interfaces in TypeScript so we can't access plant.photos
+      const plantWithPublicPhotos = plant as any;
 
-      if (anyPlant.photos) anyPlant.photos = anyPlant.photos.filter((photo: Photo) => photo.public);
+      if (plantWithPublicPhotos.photos) {
+        plantWithPublicPhotos.photos = plantWithPublicPhotos.photos.filter((photo: Photo) => photo.public);
+      }
 
-      res.send(anyPlant);
+      res.send(plantWithPublicPhotos);
     }
     else return next({ code: 403 });
   }
@@ -170,20 +171,9 @@ const findOne: RequestHandler = async (req, res, next) => {
  */
 const modify: RequestHandler = async (req, res, next) => {
   const fields = [
-    'locationId',
-    'specieId',
-    'customName',
-    'description',
-    'condition',
-    'waterFreq',
-    'waterLast',
-    'fertFreq',
-    'fertLast',
-    'fertType',
-    'potType',
-    'potSize',
-    'soil',
-    'public'
+    'locationId', 'specieId', 'customName', 'description', 'condition',
+    'waterFreq', 'waterLast', 'fertFreq', 'fertLast', 'fertType', 'potType',
+    'potSize', 'soil', 'public'
   ];
   const data: any = {};
 
@@ -191,8 +181,12 @@ const modify: RequestHandler = async (req, res, next) => {
     if (fields.includes(field)) {
       switch (field) {
         case 'condition': {
-          if (!Condition.hasOwnProperty(req.body.condition)) return next({ error: 'PLANT_CONDITION' });
-          else data.condition = Condition[req.body.condition as Condition];
+          if (req.body.condition === null) data.condition = null;
+          else if (Condition.hasOwnProperty(req.body.condition)) {
+            data.condition = Condition[req.body.condition as Condition];
+          }
+          else return next({ error: 'PLANT_CONDITION' });
+
           break;
         }
         case 'locationId':
@@ -237,23 +231,23 @@ const modify: RequestHandler = async (req, res, next) => {
      * In an environment with a specied database that supports both triggers
      * and date operations, it can be done with such trigger.
      * */
-    const updatedPlant: any = {};
+    const plantUpdatedData: any = {};
 
     if (plant.waterFreq && plant.waterLast) {
-      updatedPlant.waterNext = dayjs(plant.waterLast).add(plant.waterFreq, 'days').toDate();
+      plantUpdatedData.waterNext = dayjs(plant.waterLast).add(plant.waterFreq, 'days').toDate();
     }
 
     if (plant.fertFreq && plant.fertLast) {
-      updatedPlant.fertNext = dayjs(plant.fertLast).add(plant.fertFreq, 'days').toDate();
+      plantUpdatedData.fertNext = dayjs(plant.fertLast).add(plant.fertFreq, 'days').toDate();
     }
 
-    if (Object.keys(updatedPlant).length > 0) {
+    if (Object.keys(plantUpdatedData).length > 0) {
       plant = await prisma.plant.update({
         where: {
           id: req.parser.id,
           ownerId: req.auth.userId
         },
-        data: updatedPlant
+        data: plantUpdatedData
       });
     }
 

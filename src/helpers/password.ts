@@ -1,6 +1,16 @@
 import bcrypt from 'bcrypt';
 import { password as passwordConfig } from '../../littleterrarium.config';
 
+export type PasswordCheckResult = {
+  valid: boolean;
+  comp: {
+    minLength?: boolean,
+    hasUppercase?: boolean,
+    hasNumber?: boolean,
+    hasNonAlphanumeric?: boolean
+  }
+}
+
 const hash = (password: string) => {
   return bcrypt.hash(password, 10);
 }
@@ -9,34 +19,24 @@ const compare = (password: string , hash: string) => {
   return bcrypt.compare(password, hash);
 }
 
-const check = (password: string) => {
-  
-  const arrPasswd = [...password];
-  let minLength = (password.length >= passwordConfig.minLength);
-  let hasUppercase = !passwordConfig.requireUppercase;
-  let hasNumber = !passwordConfig.requireNumber;
-  let hasNonAlphanumeric = !passwordConfig.requireNonAlphanumeric;
+const check = (password: string): PasswordCheckResult => {
+  const result: PasswordCheckResult = { valid: true, comp: {} };
 
-  while ((arrPasswd.length > 0) || (!hasUppercase && !hasNumber && !hasNonAlphanumeric)) {
-    const char = arrPasswd.shift();
+  result.comp.minLength = (password.length >= passwordConfig.minLength);
 
-    if (!hasUppercase && (char === char?.toUpperCase()) && (char !== char?.toLowerCase())) hasUppercase = true;
-    if (!hasNumber && char && +char) hasNumber = true;
-    // TODO: check for non alphanum
-    hasNonAlphanumeric = true;
+  if (passwordConfig.requireUppercase) {
+    result.comp.hasUppercase = (/.*([A-Z]).*/).test(password);
+    result.valid = result.comp.hasUppercase;
   }
 
-  let result;
-
-  if (minLength && hasUppercase && hasNumber && hasNonAlphanumeric) {
-    result = { valid: true, msg: 'PASSWD_VALID' }
+  if (passwordConfig.requireNumber) {
+    result.comp.hasNumber = (/.*(\d).*/).test(password);
+    result.valid = result.comp.hasNumber;
   }
-  else {
-    result = {
-      valid: false,
-      error: 'PASSWD_INVALID',
-      comp: { minLength, hasUppercase, hasNumber, hasNonAlphanumeric }
-    }
+
+  if (passwordConfig.requireNonAlphanumeric) {
+    result.comp.hasNonAlphanumeric = (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/).test(password);
+    result.valid = result.comp.hasNonAlphanumeric;
   }
 
   return result;

@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { User, Role } from '@prisma/client';
+import { RequestHandler } from 'express';
+import { User, Role, Prisma } from '@prisma/client';
 import prisma from '../prismainstance';
 import Password from '../helpers/password';
 
@@ -9,7 +9,7 @@ const isEmail = (email: string): boolean => {
 
 const register: RequestHandler = async (req, res, next) => {
   const requiredFields = ['username', 'password', 'email'];
-  const optionalFields = ['firstname', 'lastname', 'public'];
+  const optionalFields = ['firstname', 'lastname', 'public', 'bio', 'preferences'];
   const data: any = {};
 
   for (const field of requiredFields) {
@@ -20,7 +20,7 @@ const register: RequestHandler = async (req, res, next) => {
       const passwdCheck = Password.check(req.body.password);
 
       if (passwdCheck.valid) data.password = await Password.hash(req.body.password);
-      else return next({ error: passwdCheck.error, data: { comp: passwdCheck.comp ? passwdCheck.comp : null } });
+      else return next({ error: 'USER_PASSWD_INVALID', data: { comp: passwdCheck.comp } });
     }
     else data[field] = req.body[field];
   }
@@ -35,8 +35,11 @@ const register: RequestHandler = async (req, res, next) => {
     }
   }
 
+  // if avatar
+  if (req.disk.file) data.avatar = req.disk.file.url;
+
   try {
-    const user: User = await prisma.user.create({ data });
+    const user = await prisma.user.create({ data });
 
     req.session.signedIn = true;
     req.session.role = user.role;
@@ -51,10 +54,16 @@ const register: RequestHandler = async (req, res, next) => {
 
 const find: RequestHandler = async (req, res, next) => {
   const conditions: any = {};
+  let email = false;
+  let preferences = true;
 
   if (req.params.username) conditions.username = req.params.username;
   else {
-    if (req.session.signedIn) conditions.id = req.auth.userId;
+    if (req.session.signedIn) {
+      conditions.id = req.auth.userId;
+      email = true;
+      preferences = true;
+    }
     else return next({ code: 401 });
   }
 
@@ -65,6 +74,10 @@ const find: RequestHandler = async (req, res, next) => {
       username: true,
       firstname: true,
       lastname: true,
+      email,
+      preferences,
+      bio: true,
+      avatar: true,
       role: true,
       public: true,
       createdAt: true,
@@ -93,6 +106,8 @@ const findById: RequestHandler = async (req, res, next) => {
       username: true,
       firstname: true,
       lastname: true,
+      bio: true,
+      avatar: true,
       role: true,
       public: true,
       createdAt: true,
@@ -109,7 +124,10 @@ const findById: RequestHandler = async (req, res, next) => {
 }
 
 const modify: RequestHandler = async (req, res, next) => {
-  const fields = ['username', 'password', 'email', 'firstname', 'lastname', 'role', 'public'];
+  const fields = [
+    'username', 'password', 'email', 'firstname', 'lastname', 'role', 'public',
+    'bio', 'avatar', 'preferences'
+  ];
   const data: any = {};
 
   for (const requestedField of Object.keys(req.body)) {
@@ -122,7 +140,7 @@ const modify: RequestHandler = async (req, res, next) => {
         const passwdCheck = Password.check(req.body.password);
 
         if (passwdCheck.valid) data.password = await Password.hash(req.body.password);
-        else return next({ error: passwdCheck.error, data: { comp: passwdCheck.comp ? passwdCheck.comp : null } });
+        else return next({ error: 'USER_PASSWD_INVALID ', data: { comp: passwdCheck.comp } });
       }
 
       else if (requestedField === 'role') {
@@ -137,6 +155,10 @@ const modify: RequestHandler = async (req, res, next) => {
       else data[requestedField] = req.body[requestedField];
     }
   }
+
+  // picture
+  if (req.body.removeAvatar) data.avatar = Prisma.JsonNull;
+  else if (req.disk.file) data.avatar = req.disk.file.url;
 
   try {
     await prisma.user.update({ where: { id: req.auth.userId }, data })
@@ -168,9 +190,10 @@ const signin: RequestHandler = async (req, res, next) => {
         req.session.role = user.role;
         req.session.userId = user.id;
 
-        // FIXME: this shouldn't be like this
-        user.password = '';
-        res.send(user);
+        // to remove the password hash from the object
+        const partialUser: Partial<User> = user;
+        delete partialUser.password;
+        res.send(partialUser);
       }
       else next({ error: 'USER_DATA_INCORRECT', code: 401 });
     }
@@ -185,7 +208,7 @@ const logout: RequestHandler = (req, res, next) => {
   });
 }
 
-
+//TODO: send verification email and verify
 const restore: RequestHandler = async (req, res, next) => {
 }
 
@@ -196,11 +219,7 @@ const checkPassword: RequestHandler = (req, res, next) => {
   const pcheck = Password.check(req.body.password);
 
   if (pcheck.valid) res.send({ msg: 'PASSWD_VALID' });
-  else {
-    const data: any = {};
-    if (pcheck.error === 'PASSWD_INVALID') data.comp = pcheck.comp;
-    next({ error: pcheck.error, data });
-  }
+  else next({ error: 'USER_PASSWD_INVALID', data: { comp: pcheck.comp }});
 }
 
 const passwordRequirements: RequestHandler = (req, res, next) => {

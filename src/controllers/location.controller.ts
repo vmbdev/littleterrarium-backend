@@ -133,12 +133,14 @@ const findOne: RequestHandler = async (req, res, next) => {
   if (location) {
     if (location.ownerId === req.auth.userId) res.send(location);
     else if ((location.ownerId !== req.auth.userId) && location.public) {
-      // FIXME: extremely inelegant, but Prisma doesn't add relations to interfaces so we can't access location.plants
-      const anyLocation = location as any;
+      // extremely inelegant, but Prisma doesn't add relations to interfaces so we can't access location.plants
+      const locationWithPublicPlants = location as any;
 
-      if (anyLocation.plants) anyLocation.plants = anyLocation.plants.filter((plant: Plant) => plant.public);
+      if (locationWithPublicPlants.plants) {
+        locationWithPublicPlants.plants = locationWithPublicPlants.plants.filter((plant: Plant) => plant.public);
+      }
 
-      res.send(anyLocation);
+      res.send(locationWithPublicPlants);
     }
     else return next({ code: 403 });
   }

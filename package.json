@@ -5,11 +5,11 @@
     "start": "ts-node --esm ./src/server.ts",
     "build": "tsc",
     "dev": "ts-node-dev --rs --respawn --watch tsconfig.json,src,littleterrarium.config.ts --transpile-only src/server.ts",
-    "db-species": "node ./utils/create_species.js"
+    "db-species": "ts-node --esm ./utils/create_species.ts"
   },
   "private": true,
   "dependencies": {
-    "@prisma/client": "^4.5.0",
+    "@prisma/client": "^4.6.1",
     "@quixo3/prisma-session-store": "^3.1.10",
     "bcrypt": "^5.1.0",
     "cors": "^2.8.5",
@@ -17,7 +17,7 @@
     "express": "^4.18.2",
     "express-session": "^1.17.3",
     "multer": "^1.4.5-lts.1",
-    "prisma": "^4.5.0",
+    "prisma": "^4.6.1",
     "sharp": "^0.31.1"
   },
   "devDependencies": {
@@ -30,6 +30,6 @@
     "@types/sharp": "^0.31.0",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^4.8.4"
+    "typescript": "^4.9.3"
   }
 }

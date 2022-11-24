@@ -4,23 +4,22 @@
  */
 import { createInterface } from 'node:readline';
 import { createReadStream } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import path, { dirname } from 'node:path';
-import { PrismaClient } from "@prisma/client";
+import path from 'node:path';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
-const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const insertSpeciesNames = () => {
   const file = path.join(__dirname, '/res/species.csv');
   const readline = createInterface({ input: createReadStream(file) });
-  let species = [];
+  const species: any[] = [];
 
   readline.on('line', (line) => {
     const parts = line.replace(/['"]+/g, '').split(',');
-    let name = `${parts[4]} ${parts[6]}`;
+    let name: string = `${parts[4]} ${parts[6]}`;
 
-    if (parts[7] && parts[8]) name += `${parts[7]} ${parts[8]}`;
+    // subspecie/variety
+    if (parts[7] && parts[8]) name += ` ${parts[7]} ${parts[8]}`;
 
     species.push({
       family: parts[2],
@@ -29,15 +28,13 @@ const insertSpeciesNames = () => {
   });
 
   readline.on('close', async () => {
-    let bulkCreate;
-
     console.log(`Inserting ${species.length} species in the database...`);
 
     while (species.length > 0) {
       const speciesPart = species.splice(0, 1000);
 
       try {
-        bulkCreate = await prisma.specie.createMany({ data: speciesPart });
+        const bulkCreate = await prisma.specie.createMany({ data: speciesPart });
         console.log(`Inserted ${bulkCreate.count} species into the database`);
       } catch(err) {
         console.log(`Error when inserting the data: ${err}`);
@@ -50,7 +47,7 @@ const insertSpeciesNames = () => {
 const insertSpeciesCommonNames = () => {
   const file = path.join(__dirname, '/res/commonnames.csv');
   const readline = createInterface({ input: createReadStream(file) });
-  let species = [];
+  const species: any[] = [];
   let lines = 0;
 
   console.log('Reading list of species common names...');

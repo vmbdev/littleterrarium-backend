@@ -49,7 +49,7 @@ model Session {
 
 model Location {
   id          Int        @id @default(autoincrement())
-  name        String
+  name        String     @db.VarChar(60)
   pictures    Json?
   light       Light
   public      Boolean    @default(false)
@@ -70,19 +70,19 @@ model Plant {
   id          Int         @id @default(autoincrement())
   specie      Specie?     @relation(fields: [specieId], references: [id], onDelete: SetNull)
   specieId    Int?
-  customName  String?
-  description String?
-  condition   Condition?
+  customName  String?     @db.VarChar(60)
+  description String?     @db.VarChar(300)
+  condition   Condition?  @default(GOOD)
   waterFreq   Int?
   waterLast   DateTime?
   waterNext   DateTime?
   fertFreq    Int?
   fertLast    DateTime?
-  fertType    String?
+  fertType    String?     @db.VarChar(120)
   fertNext    DateTime?
-  potType     String?
+  potType     String?     @db.VarChar(60)
   potSize     Int?
-  soil        String?
+  soil        String?     @db.VarChar(60)
   photos      Photo[]
   notifications Notification[]
   public      Boolean    @default(false)
@@ -98,7 +98,7 @@ enum Condition {
   BAD
   POOR
   GOOD
-  VERYGOOD
+  GREAT
   EXCELLENT
 }
 
@@ -115,7 +115,7 @@ model Hash {
 model Photo {
   id          Int        @id @default(autoincrement())
   images      Json
-  description String?
+  description String?    @db.VarChar(300)
   public      Boolean    @default(false)
   takenAt     DateTime   @default(now())
   hash        Hash       @relation(fields: [hashId], references: [id], onDelete: Cascade)
