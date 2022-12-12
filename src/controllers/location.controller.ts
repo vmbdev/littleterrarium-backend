@@ -2,8 +2,6 @@ import { RequestHandler } from 'express';
 import { Prisma, Light, Location, Plant } from '@prisma/client';
 import prisma from '../prismainstance';
 
-// FIXME: if several users upload the same picture and one deletes it, there's no way to know if it's the last copy
-
 const create: RequestHandler = async (req, res, next) => {
   // public is not really optional, but it has a default value
   // we don't include 'picture' as it's managed through req.disk
@@ -129,8 +127,8 @@ const findOne: RequestHandler = async (req, res, next) => {
 
   const location = await prisma.location.findUnique(query);
 
-  // if requesting user is not the owner, send only if it's public
   if (location) {
+    // if requesting user is not the owner, send only if it's public
     if (location.ownerId === req.auth.userId) res.send(location);
     else if ((location.ownerId !== req.auth.userId) && location.public) {
       // extremely inelegant, but Prisma doesn't add relations to interfaces so we can't access location.plants

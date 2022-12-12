@@ -13,7 +13,7 @@ router.post('/',
   uploader.array('photo', 10),
   parser.integers({ plantId: true }),
   auth.checkRelationship('plant', 'plantId'),
-  disk.gallery,
+  disk.gallery(),
   photo.create
 );
 router.get('/', auth.self, photo.find);

@@ -10,8 +10,8 @@ import FileSystem, { LocalFile } from '../helpers/filesystem';
 declare global {
   namespace Express {
     type Disk = {
-      file?: any,
-      files?: any[]
+      file?: LocalFile,
+      files?: LocalFile[]
     }
 
     interface Request {
@@ -20,58 +20,76 @@ declare global {
   }
 }
 
+type DiskOptions = {
+  protocol?: string,
+  host?: string,
+  destiny?: string
+}
+
 export const generateDisk: RequestHandler = (req, res, next) => {
   req.disk = {};
 
   next();
 }
 
-const processFile = async (file: Express.Multer.File, protocol?: string, host?: string) => {
-  const diskFile: LocalFile = await FileSystem.saveFile(file.path);
+const processFile = async (file: Express.Multer.File, options: DiskOptions) => {
+  const diskFile: LocalFile = await FileSystem.saveFile(file.path, options.destiny);
   diskFile.fieldname = file.fieldname;
   diskFile.mimetype = file.mimetype;
   diskFile.size = file.size;
 
-  if (protocol && host) {
+  if (options.protocol && options.host) {
     diskFile.url = {
-      full: `${protocol}://${host}/${diskFile.path.full}`,
-      mid: `${protocol}://${host}/${diskFile.path.mid}`,
-      thumb: `${protocol}://${host}/${diskFile.path.thumb}`
+      full: `${options.protocol}://${options.host}/${diskFile.path.full}`,
+      mid: `${options.protocol}://${options.host}/${diskFile.path.mid}`,
+      thumb: `${options.protocol}://${options.host}/${diskFile.path.thumb}`
     }
   }
 
   return diskFile;
 }
 
-export const image = async (req: Request, res: Response, next: NextFunction) => {
-  if (req.file) {
-    try {
-      req.disk.file = await processFile(req.file, req.protocol, req.get('host'));
-    } catch (err: any) {
-      if (err.error && (err.error === 'IMG_NOT_VALID')) return next({ error: err.error });
-      else return next({ code: 500 });
-    }
-  }
-
-  next();
-}
-
-export const gallery = async (req: Request, res: Response, next: NextFunction) => {
-  if (req.files) {
-    req.disk.files = [];
-
-    for (const file in req.files) {
+export const image = (directory?: string) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    if (req.file) {
       try {
-        const diskFile = await processFile((req.files as any)[file], req.protocol, req.get('host'));
-        req.disk.files.push(diskFile);
+        req.disk.file = await processFile(req.file, {
+          protocol: req.protocol,
+          host: req.get('host'),
+          destiny: directory ? `user/${req.auth.userId}/${directory}/` : undefined
+        });
       } catch (err: any) {
         if (err.error && (err.error === 'IMG_NOT_VALID')) return next({ error: err.error });
         else return next({ code: 500 });
       }
     }
-  }
 
-  next();
+    next();
+  }
+}
+
+export const gallery = (directory?: string) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    if (req.files) {
+      req.disk.files = [];
+
+      for (const file in req.files) {
+        try {
+          const diskFile = await processFile((req.files as any)[file], {
+            protocol: req.protocol,
+            host: req.get('host'),
+            destiny: directory ? `user/${req.auth.userId}/${directory}/` : undefined
+          });
+
+          req.disk.files.push(diskFile);
+        } catch (err: any) {
+          if (err.error && (err.error === 'IMG_NOT_VALID')) return next({ error: err.error });
+          else return next({ code: 500 });
+        }
+      }
+    }
+    next();
+  }
 }
 
 export default {

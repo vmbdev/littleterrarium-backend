@@ -36,10 +36,10 @@ export const hashFile = async (filePath: string): Promise<string> => {
 }
 
 // TODO: check if file exists before moving
-export const saveFile = async (filePath: string): Promise<LocalFile> => {
+export const saveFile = async (filePath: string, destiny?: string): Promise<LocalFile> => {
   const hash = await hashFile(filePath);
   const ext = await getImageExt(filePath);
-  const { newDir, newFile, relativeDir } = await createDirectories(hash);
+  const { newDir, newFile, relativeDir } = await createDirectories(hash, destiny);
 
   const filenameFull = `${newFile}.${ext}`;
   const filenameThumb = `${newFile}-thumb.${ext}`;
@@ -72,17 +72,27 @@ export const saveFile = async (filePath: string): Promise<LocalFile> => {
   return newLocalFile;
 }
 
-export const createDirectories = async (hash: string) => {
-  let counter = 0;
-  let newPath = '';
-  while (counter + 1 < files.folder.division * 2) {
-    newPath += hash.slice(counter, counter + 2) + '/';
-    counter += 2;
+export const createDirectories = async (hash: string, destiny?: string) => {
+  let newFile, newDir, relativeDir;
+
+  if (!destiny) {
+    let counter = 0;
+    let newPath = '';
+    while (counter + 1 < files.folder.division * 2) {
+      newPath += hash.slice(counter, counter + 2) + '/';
+      counter += 2;
+    }
+
+    newFile = hash.slice(counter);
+    newDir = path.join(__dirname, '../../', files.folder.public, newPath);
+    relativeDir = `${files.folder.public}/${newPath}`
+  }
+  else {
+    newFile = hash;
+    newDir = path.join(__dirname, '../../', files.folder.public, destiny);
+    relativeDir = `${files.folder.public}/${destiny}`;
   }
 
-  const newFile = hash.slice(counter);
-  const newDir = path.join(__dirname, '../../', files.folder.public, newPath);
-  const relativeDir = `${files.folder.public}/${newPath}`
   await mkdir(newDir, { recursive: true });
 
   return {
@@ -92,8 +102,10 @@ export const createDirectories = async (hash: string) => {
   };
 }
 
-export const removeFile = (filePath: string): Promise<void> => {
-  return unlink(filePath);
+export const removeFile = async (filePath: string): Promise<void> => {
+  try {
+    await unlink(filePath);
+  } catch (err) {}
 }
 
 export const removeDir = async (dirPath: string): Promise<void> => {

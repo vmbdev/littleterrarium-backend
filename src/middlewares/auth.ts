@@ -51,7 +51,7 @@ export const signedIn: RequestHandler = (req, res, next) => {
 
 /**
  * Given a model name, returns the respective prisma delegate.
- * I really hate this, as it's unscalable, but it works until
+ * I really hate this, as it's extremely unscalable, but it works until
  * I find a workaround for TypeScript. 
  * @param {string} model - The name of the model.
  * @returns {any} - The delegate object for the model.

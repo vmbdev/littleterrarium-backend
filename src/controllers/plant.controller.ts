@@ -13,77 +13,77 @@ import dayjs from 'dayjs';
  * @param {Express.NextFunction} next
  */
 const create : RequestHandler = async (req, res, next) => {
-    const requiredFields = ['locationId'];
-    const optionalFields = [
-      'specieId',
-      'customName',
-      'description',
-      'condition',
-      'waterFreq',
-      'waterLast',
-      'fertFreq',
-      'fertLast',
-      'fertType',
-      'potType',
-      'potSize',
-      'soil',
-      'public'
-    ];
-    const data: any = {};
+  const requiredFields = ['locationId'];
+  const optionalFields = [
+    'specieId',
+    'customName',
+    'description',
+    'condition',
+    'waterFreq',
+    'waterLast',
+    'fertFreq',
+    'fertLast',
+    'fertType',
+    'potType',
+    'potSize',
+    'soil',
+    'public'
+  ];
+  const data: any = {};
 
-    // if (!req.body.specieId && !req.body.customName) return next({ error: 'PLANT_SPECIE_OR_NAME' });
+  // if (!req.body.specieId && !req.body.customName) return next({ error: 'PLANT_SPECIE_OR_NAME' });
 
-    for (const field of requiredFields) {
-      if (!req.body[field]) return next({ error: 'MISSING_FIELD', data: { field } });
-      else if (field === 'locationId') data.locationId = req.parser.locationId;
-      else data[field] = req.body[field];
-    }
+  for (const field of requiredFields) {
+    if (!req.body[field]) return next({ error: 'MISSING_FIELD', data: { field } });
+    else if (field === 'locationId') data.locationId = req.parser.locationId;
+    else data[field] = req.body[field];
+  }
 
-    for (const field of optionalFields) {
-      if (req.body[field]) {
-        switch (field) {
-          case 'condition': {
-            if (!Condition.hasOwnProperty(req.body.condition)) return next({ error: 'PLANT_CONDITION' });
-            else data.condition = Condition[req.body.condition as Condition];
-            break;
-          }
-          case 'specieId':
-          case 'waterFreq':
-          case 'fertFreq':
-          case 'potSize': {
-            data[field] = req.parser[field];
-            break;
-          }
-          case 'waterLast':
-          case 'fertLast': {
-            const date = new Date(req.body[field]);
-            data[field] = date;
-            break;
-          }
-          case 'public': {
-            data.public = ((req.body.public === true) || (req.body.public === 'true'));
-            break;
-          }
-          default:
-            data[field] = req.body[field];
+  for (const field of optionalFields) {
+    if (req.body[field]) {
+      switch (field) {
+        case 'condition': {
+          if (!Condition.hasOwnProperty(req.body.condition)) return next({ error: 'PLANT_CONDITION' });
+          else data.condition = Condition[req.body.condition as Condition];
+          break;
         }
+        case 'specieId':
+        case 'waterFreq':
+        case 'fertFreq':
+        case 'potSize': {
+          data[field] = req.parser[field];
+          break;
+        }
+        case 'waterLast':
+        case 'fertLast': {
+          const date = new Date(req.body[field]);
+          data[field] = date;
+          break;
+        }
+        case 'public': {
+          data.public = ((req.body.public === true) || (req.body.public === 'true'));
+          break;
+        }
+        default:
+          data[field] = req.body[field];
       }
     }
-
-    if (req.body.waterFreq && req.body.waterLast && dayjs(req.body.waterFreq).isValid() && +req.body.waterLast) {
-      data.waterNext = dayjs(req.body.waterLast).add(req.body.waterFreq, 'days').toDate();
-    }
-
-    data.ownerId = req.auth.userId;
-
-    try {
-      const plant = await prisma.plant.create({ data });
-
-      res.send({ msg: 'PLANT_CREATED', plant });
-    } catch (err) {
-      next({ code: 500 });
-    }
   }
+
+  if (req.body.waterFreq && req.body.waterLast && dayjs(req.body.waterFreq).isValid() && +req.body.waterLast) {
+    data.waterNext = dayjs(req.body.waterLast).add(req.body.waterFreq, 'days').toDate();
+  }
+
+  data.ownerId = req.auth.userId;
+
+  try {
+    const plant = await prisma.plant.create({ data });
+
+    res.send({ msg: 'PLANT_CREATED', plant });
+  } catch (err) {
+    next({ code: 500 });
+  }
+}
 
 /**
  * Express Middleware to request a list of Plant objects optionally filtered by locationId.
@@ -251,7 +251,7 @@ const modify: RequestHandler = async (req, res, next) => {
       });
     }
 
-    res.send({ msg: 'PLANT_UPDATED', plant });
+    res.send({ msg: 'PLANT_UPDATED', data: { plant } });
   } catch (err) {
     next({ error: 'PLANT_NOT_VALID' });
   }

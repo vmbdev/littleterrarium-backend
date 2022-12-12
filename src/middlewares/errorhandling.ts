@@ -8,7 +8,7 @@ const defaultMessages: { [key: number]: string } = {
 }
 
 // TODO: manage non api errors
-const errorHandling: ErrorRequestHandler = (err, req, res, next) => {
+const errorHandling: ErrorRequestHandler = async (err, req, res, next) => {
   const errorMsg = err.error ? err.error : defaultMessages[err.code];
   const data = (err.data && Object.keys(err.data).length > 0) ? err.data : undefined
   const code = err.code ? err.code : 400;
@@ -16,7 +16,7 @@ const errorHandling: ErrorRequestHandler = (err, req, res, next) => {
   if (req.file) filesystem.removeFile(req.file.path);
   else if (req.files) {
     for (const file in req.files) {
-      filesystem.removeFile((req.files as any)[file].path);
+      await filesystem.removeFile((req.files as any)[file].path);
     }
   }
 

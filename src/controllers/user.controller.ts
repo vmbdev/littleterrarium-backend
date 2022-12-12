@@ -7,6 +7,14 @@ const isEmail = (email: string): boolean => {
   return (email.match(/^\S+@\S+\.\S+$/i) !== null);
 }
 
+const removePassword = (user: User): Partial<User> => {
+    // to remove the password hash from the object
+    const partialUser: Partial<User> = user;
+    delete partialUser.password;
+
+    return partialUser;
+}
+
 const register: RequestHandler = async (req, res, next) => {
   const requiredFields = ['username', 'password', 'email'];
   const optionalFields = ['firstname', 'lastname', 'public', 'bio', 'preferences'];
@@ -45,7 +53,7 @@ const register: RequestHandler = async (req, res, next) => {
     req.session.role = user.role;
     req.session.userId = user.id;
 
-    res.send({ msg: 'USER_CREATED' });
+    res.send({ msg: 'USER_CREATED', data: { user: removePassword(user) } });
   } catch (err: any) {
     if (err.code === 'P2002') next({ error: 'USER_FIELD', data: { field: err.meta.target[0] } })
     else next({ code: 500 });
@@ -161,8 +169,9 @@ const modify: RequestHandler = async (req, res, next) => {
   else if (req.disk.file) data.avatar = req.disk.file.url;
 
   try {
-    await prisma.user.update({ where: { id: req.auth.userId }, data })
-    res.send({ msg: 'USER_UPDATED' })
+    const user = await prisma.user.update({ where: { id: req.auth.userId }, data })
+
+    res.send({ msg: 'USER_UPDATED', data: { user: removePassword(user) } })
   } catch (err: any) {
     if (err.code === 'P2002') next({ error: 'USER_FIELD', data: { field: err.meta.target } })
     else next({ code: 500 });
@@ -190,10 +199,7 @@ const signin: RequestHandler = async (req, res, next) => {
         req.session.role = user.role;
         req.session.userId = user.id;
 
-        // to remove the password hash from the object
-        const partialUser: Partial<User> = user;
-        delete partialUser.password;
-        res.send(partialUser);
+        res.send({ user: removePassword(user) });
       }
       else next({ error: 'USER_DATA_INCORRECT', code: 401 });
     }
