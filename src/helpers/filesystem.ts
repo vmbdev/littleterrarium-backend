@@ -12,7 +12,6 @@ type Image = {
 }
 
 export type LocalFile = {
-  
   destination: string,
   hash: string,
   fieldname?: string,

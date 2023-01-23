@@ -1,6 +1,4 @@
-import path from 'node:path';
-import { mkdirSync } from 'node:fs';
-import { stat } from 'node:fs/promises';
+import {mkdirSync } from 'node:fs';
 import express, { Express } from 'express';
 import 'express-async-errors';
 import cors from 'cors';
@@ -9,6 +7,7 @@ import { PrismaSessionStore } from '@quixo3/prisma-session-store/dist/index';
 import { Role } from '@prisma/client';
 
 import apiRoutes from './routes/api.routes';
+import { enableAngularRouting } from './angular';
 import prisma from './prismainstance';
 import notifications from './helpers/notifications';
 import errorHandling from './middlewares/errorhandling';
@@ -27,25 +26,6 @@ declare module 'express-session' {
 
 mkdirSync('public', { recursive: true });
 mkdirSync('temp', { recursive: true });
-
-const enableFrontendRouting = async (app: Express) => {
-  const frontendPath = path.join(__dirname, '../dist/littleterrarium/index.html');
-
-  try {
-    const fpStat = await stat(frontendPath);
-
-    if (fpStat.isFile()) {
-      app.use('/', express.static('dist/littleterrarium'));
-
-      // for Angular routing
-      app.get('*', (req, res) => {
-        res.sendFile(frontendPath);
-      });
-    }
-  } catch (err) {
-    console.log('Angular frontend routing is not enable due to missing files.');
-  }
-}
 
 const app: Express = express();
 
@@ -80,7 +60,7 @@ app.use(
 app.use('/*', generateAuth, generateParser, generateDisk);;
 app.use('/api', apiRoutes);
 app.use('/public', express.static('public'));
-enableFrontendRouting(app);
+enableAngularRouting(app, serverConfig.angular.defaultLang);
 app.use(errorHandling);
 
 // setInterval(() => {

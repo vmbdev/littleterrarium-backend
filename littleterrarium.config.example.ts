@@ -5,6 +5,9 @@ export const server = {
   session: {
     secret: 'A little terrarium with a long list of plants'
   },
+  angular: {
+    defaultLang: 'en'       // If there's a language set as default with a default basehref (/), here is the place to set it up
+  }
 }
 
 export const files = {
