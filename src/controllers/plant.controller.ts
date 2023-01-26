@@ -111,6 +111,8 @@ const find : RequestHandler = async (req, res, next) => {
   }
   else query.where = { ownerId: req.auth.userId };
 
+  // Can only get own user's location's plants. To get other user's, go through location controller
+  // this is to avoid having to check on location table whether it's public or not
   if (req.parser.locationId) query.where.locationId = req.parser.locationId;
 
   query.select = {

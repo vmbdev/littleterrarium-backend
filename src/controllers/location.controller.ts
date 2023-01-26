@@ -70,7 +70,7 @@ const find: RequestHandler = async (req, res, next) => {
     };
   }
 
-  else if (req.query.plants) {
+  else if (req.query.plants === 'true') {
     const limit: number | undefined = req.query.limit ? +req.query.limit : undefined;
 
     // a limit of 0 implies no limit
@@ -104,10 +104,10 @@ const find: RequestHandler = async (req, res, next) => {
 const findOne: RequestHandler = async (req, res, next) => {
   const query: any = {
     where: { id: req.parser.id },
-    select: { id: true, name: true, pictures: true, light: true, public: true, plants: true, ownerId: true }
+    select: { id: true, name: true, pictures: true, light: true, public: true, plants: false, ownerId: true }
    };
 
-  if (req.query.plants) {
+  if (req.query.plants === 'true') {
     const limit: number | undefined = req.query.limit ? +req.query.limit : undefined;
 
     query.select.plants = {
