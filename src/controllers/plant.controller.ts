@@ -1,5 +1,5 @@
 import type { RequestHandler } from 'express';
-import { Condition, Photo } from '@prisma/client'
+import { Condition, Photo, Prisma } from '@prisma/client'
 import prisma from '../prismainstance';
 import dayjs from 'dayjs';
 
@@ -70,8 +70,12 @@ const create : RequestHandler = async (req, res, next) => {
     }
   }
 
-  if (req.body.waterFreq && req.body.waterLast && dayjs(req.body.waterFreq).isValid() && +req.body.waterLast) {
-    data.waterNext = dayjs(req.body.waterLast).add(req.body.waterFreq, 'days').toDate();
+  // TODO: check
+  if (req.parser.waterFreq && req.body.waterLast && dayjs(req.parser.waterFreq).isValid() && +req.body.waterLast) {
+    data.waterNext = dayjs(req.body.waterLast).add(req.parser.waterFreq, 'days').toDate();
+  }
+  if (req.parser.fertFreq && req.body.fertLast && dayjs(req.parser.fertFreq).isValid() && +req.body.fertLast) {
+    data.fertNext = dayjs(req.body.fertLast).add(req.parser.fertFreq, 'days').toDate();
   }
 
   data.ownerId = req.auth.userId;
@@ -175,7 +179,7 @@ const modify: RequestHandler = async (req, res, next) => {
   const fields = [
     'locationId', 'specieId', 'customName', 'description', 'condition',
     'waterFreq', 'waterLast', 'fertFreq', 'fertLast', 'fertType', 'potType',
-    'potSize', 'soil', 'public'
+    'potSize', 'soil', 'public', 'removeSpecie'
   ];
   const data: any = {};
 
@@ -203,6 +207,10 @@ const modify: RequestHandler = async (req, res, next) => {
         case 'fertLast': {
           const date = new Date(req.body[field]);
           data[field] = date;
+          break;
+        }
+        case 'removeSpecie': {
+          data.specieId = null;
           break;
         }
         case 'public': {

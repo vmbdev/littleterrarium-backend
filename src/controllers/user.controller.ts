@@ -199,7 +199,7 @@ const signin: RequestHandler = async (req, res, next) => {
         req.session.role = user.role;
         req.session.userId = user.id;
 
-        res.send({ user: removePassword(user) });
+        res.send({ msg: 'USER_SIGNEDIN', data: { user: removePassword(user) } });
       }
       else next({ error: 'USER_DATA_INCORRECT', code: 401 });
     }

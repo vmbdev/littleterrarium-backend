@@ -97,7 +97,7 @@ export const checkRelationship = (model: string, idField: string) => {
     const prismaDelegate = getModelDelegate(model);
 
     if ((req.method === 'PUT') || (req.method === 'POST') && req.body[idField]) id = +req.body[idField];
-    else id = +req.params[idField];
+    else if (req.params[idField]) id = +req.params[idField];
 
     if (prismaDelegate && id) {
       try {

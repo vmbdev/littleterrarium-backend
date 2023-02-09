@@ -45,7 +45,7 @@ const find: RequestHandler = async (req, res, next) => {
   const photos = await prisma.photo.findMany(query);
 
   if (photos.length > 0) res.send(photos);
-  else next({ error: 'PHOTO_NOT_FOUND' });
+  else next({ error: 'PHOTO_NOT_FOUND', code: 404 });
 }
 
 const findOne: RequestHandler = async (req, res, next) => {
@@ -88,7 +88,7 @@ const modify: RequestHandler = async (req, res, next) => {
     });
     res.send({ msg: 'PHOTO_UPDATED', data: { photo } });
   } catch (err) {
-    next({ error: 'PHOTO_NOT_FOUND' });
+    next({ error: 'PHOTO_NOT_FOUND', code: 404 });
   }
 }
 
@@ -99,7 +99,7 @@ const remove: RequestHandler = async (req, res, next) => {
 
     res.send({ msg: 'PHOTO_REMOVED', data: { photo } });
   } catch (err) {
-    next({ error: 'PHOTO_NOT_FOUND' });
+    next({ error: 'PHOTO_NOT_FOUND', code: 404 });
   }
 }
 

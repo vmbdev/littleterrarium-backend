@@ -1,4 +1,4 @@
-import {mkdirSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import express, { Express } from 'express';
 import 'express-async-errors';
 import cors from 'cors';
