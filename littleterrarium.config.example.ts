@@ -19,6 +19,11 @@ export const files = {
   }
 }
 
+export const username = {
+  minLength: 5,
+  maxLength: 20
+}
+
 export const password = {
   minLength: 8,
   requireUppercase: true,

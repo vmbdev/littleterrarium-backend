@@ -2,17 +2,24 @@ import { RequestHandler } from 'express';
 import { User, Role, Prisma } from '@prisma/client';
 import prisma from '../prismainstance';
 import Password from '../helpers/password';
+import { username as usernameConfig } from '../../littleterrarium.config'
 
 const isEmail = (email: string): boolean => {
   return (email.match(/^\S+@\S+\.\S+$/i) !== null);
 }
 
 const removePassword = (user: User): Partial<User> => {
-    // to remove the password hash from the object
-    const partialUser: Partial<User> = user;
-    delete partialUser.password;
+  // to remove the password hash from the object
+  const partialUser: Partial<User> = user;
+  delete partialUser.password;
 
-    return partialUser;
+  return partialUser;
+}
+
+const isUsernameValid = (username: string): boolean => {
+  const regexp = new RegExp(`^(?=.{${usernameConfig.minLength},${usernameConfig.maxLength}}$)(?!.*[_.]{2})[a-zA-Z0-9._-]+$`);
+
+  return regexp.test(username);
 }
 
 const register: RequestHandler = async (req, res, next) => {
@@ -24,13 +31,22 @@ const register: RequestHandler = async (req, res, next) => {
     // if a mandatory field isn't received, return with error
     if (!req.body[field]) return next({ error: 'MISSING_FIELD', data: { field } });
 
-    else if (field === 'password') {
+    if (field === 'password') {
       const passwdCheck = Password.check(req.body.password);
 
       if (passwdCheck.valid) data.password = await Password.hash(req.body.password);
       else return next({ error: 'USER_PASSWD_INVALID', data: { comp: passwdCheck.comp } });
     }
-    else data[field] = req.body[field];
+
+    else {
+      if ((field === 'username') && !isUsernameValid(req.body.username))
+        return next({ error: 'USER_INVALID_FIELD', data: { field: 'username' } });
+
+      else if ((field === 'email') && !isEmail(req.body.email))
+        return next({ error: 'USER_INVALID_FIELD', data: { field: 'email' } });
+
+      else data[field] = req.body[field];
+    }
   }
 
   // check through the optinal fields and add them if they're present
@@ -140,7 +156,11 @@ const modify: RequestHandler = async (req, res, next) => {
 
   for (const requestedField of Object.keys(req.body)) {
     if (fields.includes(requestedField)) {
-      if ((requestedField === 'email') && !isEmail(req.body.email)) {
+      if ((requestedField === 'username') && !isUsernameValid(req.body.username)) {
+        return next({ error: 'USER_FIELD', data: { field: 'username' } });
+      }
+
+      else if ((requestedField === 'email') && !isEmail(req.body.email)) {
         return next({ error: 'USER_FIELD', data: { field: 'email' } });
       }
 
@@ -178,6 +198,7 @@ const modify: RequestHandler = async (req, res, next) => {
   }
 }
 
+// TODO: removal of user
 const remove: RequestHandler = (req, res, next) => {
 }
 

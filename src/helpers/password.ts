@@ -26,18 +26,20 @@ const check = (password: string): PasswordCheckResult => {
 
   if (passwordConfig.requireUppercase) {
     result.comp.hasUppercase = (/.*([A-Z]).*/).test(password);
-    result.valid = result.comp.hasUppercase;
+    result.valid &&= result.comp.hasUppercase;
   }
 
   if (passwordConfig.requireNumber) {
     result.comp.hasNumber = (/.*(\d).*/).test(password);
-    result.valid = result.comp.hasNumber;
+    result.valid &&= result.comp.hasNumber;
   }
 
   if (passwordConfig.requireNonAlphanumeric) {
     result.comp.hasNonAlphanumeric = (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/).test(password);
-    result.valid = result.comp.hasNonAlphanumeric;
+    result.valid &&= result.comp.hasNonAlphanumeric;
   }
+
+  result.valid &&= result.comp.minLength;
 
   return result;
 }

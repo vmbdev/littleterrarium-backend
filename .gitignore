@@ -9,3 +9,5 @@ dist
 .env
 littleterrarium.config.ts
 CHANGELOG.md
+TODO.md
+src/helpers/errorgen.ts
