@@ -18,7 +18,7 @@ export type LocalFile = {
   mimetype?: string,
   size?: number,
   url?: Image,
-  path?: Image,
+  path: Image,
   webp?: Image
 }
 
@@ -42,10 +42,9 @@ export const saveFile = async (filePath: string, destiny?: string): Promise<Loca
   const storedImages = await storeImage(filePath, newDir, { newFilename, relativeDir, webpOnly: files.webpOnly, webp: files.webp });
   const newLocalFile: LocalFile = {
     destination: newDir,
-    hash
+    hash,
+    path: storedImages[0]
   };
-
-  newLocalFile.path = storedImages[0];
 
   if (files.webp && !files.webpOnly) newLocalFile.webp = storedImages[1];
 

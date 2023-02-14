@@ -2,11 +2,10 @@
  * Helper class for the models requiring photos (Plant, User, Location)
  */
 
-import { PrismaPromise, Hash } from "@prisma/client";
 import prisma from "../prismainstance";
 import filesystem, { LocalFile } from "./filesystem";
 
-export const createPhoto = (data: any, file: LocalFile) : PrismaPromise<Hash> => {
+export const createPhoto = (data: any, file: LocalFile) => {
   const photoData = { ...data };
   photoData.images = file.url;
   
