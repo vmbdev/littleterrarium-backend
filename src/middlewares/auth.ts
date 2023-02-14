@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import type { RequestHandler } from 'express';
 import { Role } from '@prisma/client';
 import prisma from '../prismainstance';
+import { LTRes } from '../helpers/ltres';
 
 declare global {
   namespace Express {
@@ -28,22 +29,22 @@ export const generateAuth: RequestHandler = (req, res, next) => {
 
 // only allow if it's signed in, and if the data modifying is his/her or if he/she's an admin
 export const self: RequestHandler = (req, res, next) => {
-  if (!req.session.signedIn) return next({ code: 401 });
+  if (!req.session.signedIn) return next(LTRes.createCode(401));
   else if ((req.auth.userId !== req.session.userId) && (req.session.role !== Role.ADMIN)) {
-    return next({ code: 403 });
+    return next(LTRes.createCode(403));
   }
 
   next();
 }
 
 export const admin: RequestHandler = (req, res, next) => {
-  if (!req.session.signedIn || (req.session.role !== Role.ADMIN)) return next({ code: 403 });
+  if (!req.session.signedIn || (req.session.role !== Role.ADMIN)) return next(LTRes.createCode(403));
 
   next();
 }
 
 export const signedIn: RequestHandler = (req, res, next) => {
-  if (!req.session.signedIn) return next({ code: 403 });
+  if (!req.session.signedIn) return next(LTRes.createCode(403));
 
   next();
 }
@@ -108,7 +109,7 @@ export const checkRelationship = (model: string, idField: string) => {
           }
         });
       } catch (err) {
-        return next({ code: 403 });
+        return next(LTRes.createCode(403));
       }
     }
 
@@ -138,7 +139,7 @@ export const checkOwnership = (model: string) => {
           }
         });
       } catch (err) {
-        return next({ code: 403 });
+        return next(LTRes.createCode(403));
       }
     }
 

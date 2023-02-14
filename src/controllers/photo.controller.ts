@@ -1,9 +1,10 @@
 import { RequestHandler } from 'express';
 import prisma from "../prismainstance";
 import { createPhoto, removePhoto } from '../helpers/photomanager';
+import { LTRes } from '../helpers/ltres';
 
 const create: RequestHandler = async (req, res, next) => {
-  if (!req.disk.files || (req.disk.files.length === 0)) return next({ error: 'PHOTO_NOT_FOUND' });
+  if (!req.disk.files || (req.disk.files.length === 0)) return next(LTRes.msg('PHOTO_NOT_FOUND'));
 
   const data: any = {};
   const optionalFields = ['description', 'public'];
@@ -23,7 +24,7 @@ const create: RequestHandler = async (req, res, next) => {
   const ops = req.disk.files.map((file) => createPhoto(data, file));
   
   await prisma.$transaction(ops);
-  res.send({ msg: 'PHOTOS_CREATED' });
+  res.send(LTRes.msg('PHOTOS_CREATED'));
 }
 
 const find: RequestHandler = async (req, res, next) => {
@@ -45,7 +46,7 @@ const find: RequestHandler = async (req, res, next) => {
   const photos = await prisma.photo.findMany(query);
 
   if (photos.length > 0) res.send(photos);
-  else next({ error: 'PHOTO_NOT_FOUND', code: 404 });
+  else next(LTRes.msg('PHOTO_NOT_FOUND').setCode(404));
 }
 
 const findOne: RequestHandler = async (req, res, next) => {
@@ -59,9 +60,9 @@ const findOne: RequestHandler = async (req, res, next) => {
   // if requesting user is not the owner, send only if it's public
   if (photo) {
     if ((photo.ownerId === req.auth.userId) || photo.public) res.send(photo);
-    else return next({ code: 403 });
+    else return next(LTRes.createCode(403));
   }
-  else next({ error: 'PHOTO_NOT_FOUND', code: 404 });
+  else next(LTRes.msg('PHOTO_NOT_FOUND').setCode(404));
 }
 
 // let's be conservative here:
@@ -86,9 +87,9 @@ const modify: RequestHandler = async (req, res, next) => {
       },
       data,
     });
-    res.send({ msg: 'PHOTO_UPDATED', data: { photo } });
+    res.send(LTRes.msg('PHOTO_UPDATED').photo(photo));
   } catch (err) {
-    next({ error: 'PHOTO_NOT_FOUND', code: 404 });
+    next(LTRes.msg('PHOTO_NOT_FOUND').setCode(404));
   }
 }
 
@@ -97,9 +98,9 @@ const remove: RequestHandler = async (req, res, next) => {
     // auth is checked in middleware
     const photo = await removePhoto(req.parser.id, req.auth.userId!);
 
-    res.send({ msg: 'PHOTO_REMOVED', data: { photo } });
+    res.send(LTRes.msg('PHOTO_REMOVED').photo(photo));
   } catch (err) {
-    next({ error: 'PHOTO_NOT_FOUND', code: 404 });
+    next(LTRes.msg('PHOTO_NOT_FOUND').setCode(404));
   }
 }
 

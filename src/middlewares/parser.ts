@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
+import { LTRes } from '../helpers/ltres';
 
 declare global {
   namespace Express {
@@ -26,9 +27,9 @@ export const integers = (list: any) => {
       if (place) {
         // avoid mutating params or body
         req.parser[field] = Number.parseInt(place[field]);
-        if (!req.parser[field]) return next({ error: 'INVALID_VALUE', data: { field } })
+        if (!req.parser[field]) return next(LTRes.msg('INVALID_VALUE').errorField(field));
       }
-      else if (list[field]) return next({ error: 'MISSING_VALUE', data: { field } });
+      else if (list[field]) return next(LTRes.msg('MISSING_VALUE').errorField(field));
     }
 
     next();

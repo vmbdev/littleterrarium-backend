@@ -5,6 +5,7 @@
  */
 
 import { RequestHandler, Request, Response, NextFunction } from 'express';
+import { LTRes } from '../helpers/ltres';
 import FileSystem, { LocalFile } from '../helpers/filesystem';
 
 declare global {
@@ -59,8 +60,8 @@ export const image = (directory?: string) => {
           destiny: directory ? `user/${req.auth.userId}/${directory}/` : undefined
         });
       } catch (err: any) {
-        if (err.error && (err.error === 'IMG_NOT_VALID')) return next({ error: err.error });
-        else return next({ code: 500 });
+        if (err.error && (err.error === 'IMG_NOT_VALID')) return next(LTRes.msg('IMG_NOT_VALID'));
+        else return next(LTRes.createCode(500));
       }
     }
 
@@ -83,8 +84,8 @@ export const gallery = (directory?: string) => {
 
           req.disk.files.push(diskFile);
         } catch (err: any) {
-          if (err.error && (err.error === 'IMG_NOT_VALID')) return next({ error: err.error });
-          else return next({ code: 500 });
+          if (err.error && (err.error === 'IMG_NOT_VALID')) return next(LTRes.msg('IMG_NOT_VALID'));
+          else return next(LTRes.createCode(500));
         }
       }
     }

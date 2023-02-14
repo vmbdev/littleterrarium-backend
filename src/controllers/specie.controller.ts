@@ -1,4 +1,5 @@
-import { NextFunction, Request, RequestHandler, Response } from "express";
+import { RequestHandler } from "express";
+import { LTRes } from "../helpers/ltres";
 import prisma from "../prismainstance";
 
 const create: RequestHandler =  async (req, res, next) => {
@@ -7,7 +8,7 @@ const create: RequestHandler =  async (req, res, next) => {
   const data: any = {};
 
   for (const field of requiredFields) {
-    if (!req.body[field]) return next({ error: 'MISSING_FIELD', data: { field } });
+    if (!req.body[field]) return next(LTRes.msg('MISSING_FIELD').errorField(field));
     else data[field] = req.body[field];
   }
 
@@ -17,7 +18,7 @@ const create: RequestHandler =  async (req, res, next) => {
         try {
           data.care = JSON.parse(req.body.care);
         } catch (err) {
-          return next({ error: 'SPECIE_CARE_NOT_VALID' });
+          return next(LTRes.msg('SPECIE_CARE_NOT_VALID'));
         }
       }
       else data[field] = req.body[field];
@@ -26,14 +27,14 @@ const create: RequestHandler =  async (req, res, next) => {
 
   try {
     await prisma.specie.create({ data });
-    res.send({ msg: 'SPECIE_CREATED' });
+    res.send(LTRes.msg('SPECIE_CREATED'));
   } catch (e) {
-    next({ code: 500 });
+    next(LTRes.createCode(500));
   }
 }
 
 const find: RequestHandler = async (req, res, next) => {
-  if (!req.params.name) return next({ error: 'SPECIE_NAME_NOT_VALID' });
+  if (!req.params.name) return next(LTRes.msg('SPECIE_NAME_NOT_VALID'));
 
   const name = req.params.name.toLowerCase();
   const plants = await prisma.specie.findMany({
@@ -57,7 +58,7 @@ const findOne: RequestHandler = async (req, res, next) => {
   const plant = await prisma.specie.findUnique({ where: { id: req.parser.id } });
 
   if (plant) res.send(plant);
-  else next({ error: 'SPECIE_NOT_VALID' });
+  else next(LTRes.msg('SPECIE_NOT_VALID'));
 }
 
 const modify: RequestHandler = async (req, res, next) => {
@@ -70,7 +71,7 @@ const modify: RequestHandler = async (req, res, next) => {
         try {
           data.care = JSON.parse(req.body.care);
         } catch (err) {
-          return next({ error: 'SPECIE_CARE_NOT_VALID' });
+          return next(LTRes.msg('SPECIE_CARE_NOT_VALID'));
         }
       }
       else data[field] = req.body[field];
@@ -79,18 +80,18 @@ const modify: RequestHandler = async (req, res, next) => {
 
   try {
     await prisma.specie.update({ where: { id: req.parser.id }, data });
-    res.send({ msg: 'SPECIE_UPDATED' });
+    res.send(LTRes.msg('SPECIE_UPDATED'));
   } catch (err) {
-    next({ error: 'SPECIE_NOT_VALID' });
+    next(LTRes.msg('SPECIE_NOT_VALID'));
   }
 }
 
 const remove: RequestHandler = async (req, res, next) => {
   try {
     await prisma.specie.delete({ where: { id: req.parser.id } });
-    res.send({ msg: 'SPECIE_REMOVED' });
+    res.send(LTRes.msg('SPECIE_REMOVED'));
   } catch (err) {
-    next({ error: 'SPECIE_NOT_VALID' });
+    next(LTRes.msg('SPECIE_NOT_VALID'));
   }
 }
 

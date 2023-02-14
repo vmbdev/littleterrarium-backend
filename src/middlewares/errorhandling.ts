@@ -1,4 +1,5 @@
 import { ErrorRequestHandler } from 'express';
+import { LTRes } from '../helpers/ltres';
 import filesystem from '../helpers/filesystem';
 
 const defaultMessages: { [key: number]: string } = {
@@ -7,12 +8,8 @@ const defaultMessages: { [key: number]: string } = {
   500: 'SERVER_ERROR',
 }
 
-// TODO: manage non api errors
 const errorHandling: ErrorRequestHandler = async (err, req, res, next) => {
-  const errorMsg = err.error ? err.error : defaultMessages[err.code];
-  const data = (err.data && Object.keys(err.data).length > 0) ? err.data : undefined
-  const code = err.code ? err.code : 400;
-
+  // remove temporary files that didn't get processed
   if (req.file) filesystem.removeFile(req.file.path);
   else if (req.files) {
     for (const file in req.files) {
@@ -20,10 +17,23 @@ const errorHandling: ErrorRequestHandler = async (err, req, res, next) => {
     }
   }
 
-  res.status(code).send({
-    msg: errorMsg,
-    data
-  });
+  if (err instanceof LTRes) {
+    const error: LTRes = err;
+    let code: number;
+
+    if (error.code) {
+      code = error.code;
+
+      if (!error.msg) error.msg = defaultMessages[error.code];
+    }
+    else code = 400;
+
+    delete error.code;
+
+    res.status(code).send(error);
+  }
+
+  else res.status(500).send();
 }
 
 export default errorHandling;

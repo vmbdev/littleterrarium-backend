@@ -6,7 +6,7 @@ export const server = {
     secret: 'A little terrarium with a long list of plants'
   },
   angular: {
-    defaultLang: 'en'       // If there's a language set as default with a default basehref (/), here is the place to set it up
+    defaultLang: 'en' // If there's a language set as default with a default basehref (/), here is the place to set it up
   }
 }
 
@@ -16,7 +16,9 @@ export const files = {
     division: 3,
     temp: 'temp',
     public: 'public'
-  }
+  },
+  webp: true, // makes a copy of the uploaded images to the WebP format
+  webpOnly: false // only serves WebP files
 }
 
 export const username = {

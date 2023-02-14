@@ -1,5 +1,6 @@
 import type { RequestHandler } from 'express';
-import { Condition, Photo, Prisma } from '@prisma/client'
+import { Condition, Photo } from '@prisma/client'
+import { LTRes } from '../helpers/ltres';
 import prisma from '../prismainstance';
 import dayjs from 'dayjs';
 
@@ -34,7 +35,7 @@ const create : RequestHandler = async (req, res, next) => {
   // if (!req.body.specieId && !req.body.customName) return next({ error: 'PLANT_SPECIE_OR_NAME' });
 
   for (const field of requiredFields) {
-    if (!req.body[field]) return next({ error: 'MISSING_FIELD', data: { field } });
+    if (!req.body[field]) return next(LTRes.msg('MISSING_FIELD').errorField(field));
     else if (field === 'locationId') data.locationId = req.parser.locationId;
     else data[field] = req.body[field];
   }
@@ -43,7 +44,7 @@ const create : RequestHandler = async (req, res, next) => {
     if (req.body[field]) {
       switch (field) {
         case 'condition': {
-          if (!Condition.hasOwnProperty(req.body.condition)) return next({ error: 'PLANT_CONDITION' });
+          if (!Condition.hasOwnProperty(req.body.condition)) return next(LTRes.msg('PLANT_CONDITION'));
           else data.condition = Condition[req.body.condition as Condition];
           break;
         }
@@ -83,9 +84,9 @@ const create : RequestHandler = async (req, res, next) => {
   try {
     const plant = await prisma.plant.create({ data });
 
-    res.send({ msg: 'PLANT_CREATED', plant });
+    res.send(LTRes.msg('PLANT_CREATED').plant(plant));
   } catch (err) {
-    next({ code: 500 });
+    next(LTRes.createCode(500));
   }
 }
 
@@ -163,9 +164,9 @@ const findOne: RequestHandler = async (req, res, next) => {
 
       res.send(plantWithPublicPhotos);
     }
-    else return next({ code: 403 });
+    else return next(LTRes.createCode(403));
   }
-  else next({ error: 'PLANT_NOT_FOUND', code: 404 });
+  else next(LTRes.msg('PLANT_NOT_FOUND').setCode(404));
 }
 
 /**
@@ -191,7 +192,7 @@ const modify: RequestHandler = async (req, res, next) => {
           else if (Condition.hasOwnProperty(req.body.condition)) {
             data.condition = Condition[req.body.condition as Condition];
           }
-          else return next({ error: 'PLANT_CONDITION' });
+          else return next(LTRes.msg('PLANT_CONDITION'));
 
           break;
         }
@@ -261,9 +262,9 @@ const modify: RequestHandler = async (req, res, next) => {
       });
     }
 
-    res.send({ msg: 'PLANT_UPDATED', data: { plant } });
+    res.send(LTRes.msg('PLANT_UPDATED').plant(plant));
   } catch (err) {
-    next({ error: 'PLANT_NOT_VALID' });
+    next(LTRes.msg('PLANT_NOT_VALID'));
   }
 }
 
@@ -278,8 +279,8 @@ const remove: RequestHandler = async (req, res, next) => {
   // FIXME: update photo hash references
   const plant = await prisma.plant.delete({ where: { id: req.parser.id, ownerId: req.auth.userId } });
 
-  if (plant) res.send({ msg: 'PLANT_REMOVED' });
-  else next({ error: 'PLANT_NOT_VALID' });
+  if (plant) res.send(LTRes.msg('PLANT_REMOVED'));
+  else next(LTRes.msg('PLANT_NOT_VALID'));
 }
 
 export default {

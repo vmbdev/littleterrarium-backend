@@ -1,6 +1,7 @@
 import { RequestHandler } from 'express';
 import { Prisma, Light, Location, Plant } from '@prisma/client';
 import prisma from '../prismainstance';
+import { LTRes } from '../helpers/ltres';
 
 const create: RequestHandler = async (req, res, next) => {
   // public is not really optional, but it has a default value
@@ -12,10 +13,10 @@ const create: RequestHandler = async (req, res, next) => {
   // check through the mandatory fields
   for (const field of requiredFields) {
     if (!req.body[field]) {
-      return next({ error: 'MISSING_FIELD', data: { field } });
+      return next(LTRes.msg('MISSING_FIELD').errorField(field));
     }
     else if ((field === 'light') && !Light.hasOwnProperty(req.body[field])) {
-      return next({ error: 'INCORRECT_FIELD', data: { field, values: Object.values(Light) } });
+      return next(LTRes.msg('INCORRECT_FIELD').errorField(field).errorValues(Object.values(Light)));
     }
 
     data[field] = req.body[field];
@@ -37,9 +38,9 @@ const create: RequestHandler = async (req, res, next) => {
   data.ownerId = req.auth.userId;
   try {
     const newLocation = await prisma.location.create({ data });
-    res.send({ msg: 'LOCATION_CREATED', location: newLocation });
+    res.send(LTRes.msg('LOCATION_CREATED').location(newLocation));
   } catch (err) {
-    next({ code: 500 });
+    next(LTRes.createCode(500));
   }
 }
 
@@ -140,9 +141,9 @@ const findOne: RequestHandler = async (req, res, next) => {
 
       res.send(locationWithPublicPlants);
     }
-    else return next({ code: 403 });
+    else return next(LTRes.createCode(403));
   }
-  else next({ error: 'LOCATION_NOT_FOUND', code: 404 });
+  else next(LTRes.msg('LOCATION_NOT_FOUND').setCode(404));
 }
 
 const modify: RequestHandler = async (req, res, next) => {
@@ -172,8 +173,8 @@ const modify: RequestHandler = async (req, res, next) => {
     data
   });
 
-  if (location) res.send({ msg: 'LOCATION_UPDATED', location });
-  else next({ error: 'LOCATION_NOT_VALID' });
+  if (location) res.send(LTRes.msg('LOCATION_UPDATED').location(location));
+  else next(LTRes.msg('LOCATION_NOT_VALID'));
 }
 
 const remove: RequestHandler = async (req, res, next) => {
@@ -184,8 +185,8 @@ const remove: RequestHandler = async (req, res, next) => {
     }
   });
 
-  if (location) res.send({ msg: 'LOCATION_REMOVED' });
-  else next({ error: 'LOCATION_NOT_VALID' });
+  if (location) res.send(LTRes.msg('LOCATION_REMOVED'));
+  else next(LTRes.msg('LOCATION_NOT_VALID'));
 }
 
 export default {
