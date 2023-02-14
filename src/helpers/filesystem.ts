@@ -39,7 +39,12 @@ export const hashFile = async (filePath: string): Promise<string> => {
 export const saveFile = async (filePath: string, destiny?: string): Promise<LocalFile> => {
   const hash = await hashFile(filePath);
   const { newDir, newFilename, relativeDir } = await createDirectories(hash, destiny);
-  const storedImages = await storeImage(filePath, newDir, { newFilename, relativeDir, webpOnly: files.webpOnly, webp: files.webp });
+  const storedImages = await storeImage(filePath, newDir, {
+    newFilename,
+    relativeDir,
+    webpOnly: files.webpOnly,
+    webp: files.webp
+  });
   const newLocalFile: LocalFile = {
     destination: newDir,
     hash,
@@ -61,13 +66,13 @@ type StoreImageSettings = {
 }
 
 export const storeImage = async (source: string, dest: string, settings: StoreImageSettings): Promise<Image[]> => {
-  const img = sharp(source).rotate();
+  const img = sharp(source, { failOnError: false }).rotate();
   const images: Image[] = [];
   const ext = settings.webpOnly ? 'webp' : await getImageExt(img);
   const filenames = getFilenames(settings.newFilename, ext ? ext : 'jpg');
 
-  let thumbnail = img.clone().resize({ width: 250, height: 250, fit: 'cover' });
-  let middleSize = img.clone().resize({ width: 750, fit: 'contain', position: 'left top' });
+  const thumbnail = img.clone().resize({ width: 250, height: 250, fit: 'cover' });
+  const middleSize = img.clone().resize({ width: 750, fit: 'contain', position: 'left top' });
 
   if (!settings.webpOnly) {
     await img.toFile(path.join(dest, filenames.full));
