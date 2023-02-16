@@ -120,8 +120,8 @@ model Photo {
   takenAt     DateTime   @default(now())
   hash        Hash       @relation(fields: [hashId], references: [id], onDelete: Cascade)
   hashId      Int
-  plant       Plant      @relation(fields: [plantId], references: [id], onDelete: Cascade)
-  plantId     Int
+  plant       Plant?     @relation(fields: [plantId], references: [id], onDelete: SetNull)
+  plantId     Int?
   owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId     Int
   createdAt   DateTime   @default(now())

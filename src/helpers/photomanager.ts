@@ -24,7 +24,7 @@ export const createPhoto = (data: any, file: LocalFile) => {
   });
 }
 
-export const removePhoto = async (id: number, ownerId: number) => {
+export const removePhoto = async (id: number, ownerId?: number) => {
   const photo = await prisma.photo.delete({ where: { id, ownerId }});
 
   // no need to check for ownerId as we checked above

@@ -1,6 +1,7 @@
 import type { RequestHandler } from 'express';
 import { Condition, Photo } from '@prisma/client'
 import { LTRes } from '../helpers/ltres';
+import { removePhoto } from '../helpers/photomanager';
 import prisma from '../prismainstance';
 import dayjs from 'dayjs';
 
@@ -66,12 +67,13 @@ const create : RequestHandler = async (req, res, next) => {
       }
     }
   }
-
-  // TODO: check
-  if (req.parser.waterFreq && req.body.waterLast && dayjs(req.parser.waterFreq).isValid() && +req.body.waterLast) {
+  
+  // if water/fertiliser frequencies and last times are given,
+  // calculate the next time it must be done
+  if (req.parser.waterFreq && req.body.waterLast && dayjs(req.parser.waterLast).isValid() && +req.body.waterFreq) {
     data.waterNext = dayjs(req.body.waterLast).add(req.parser.waterFreq, 'days').toDate();
   }
-  if (req.parser.fertFreq && req.body.fertLast && dayjs(req.parser.fertFreq).isValid() && +req.body.fertLast) {
+  if (req.parser.fertFreq && req.body.fertLast && dayjs(req.parser.fertLast).isValid() && +req.body.fertFreq) {
     data.fertNext = dayjs(req.body.fertLast).add(req.parser.fertFreq, 'days').toDate();
   }
 
@@ -259,10 +261,21 @@ const modify: RequestHandler = async (req, res, next) => {
  * Remove a Plant object by its id.
  */
 const remove: RequestHandler = async (req, res, next) => {
-  // FIXME: update photo hash references
-  const plant = await prisma.plant.delete({ where: { id: req.parser.id, ownerId: req.auth.userId } });
+  const plant = await prisma.plant.delete({
+    where: {
+      id: req.parser.id,
+      ownerId: req.auth.userId
+    },
+    include: { photos: true }
+  });
 
-  if (plant) res.send(LTRes.msg('PLANT_REMOVED'));
+  if (plant) {
+    // update references of the hashes of the photos
+    for (const photo of plant.photos) {
+      removePhoto(photo.id, req.auth.userId);
+    }
+    res.send(LTRes.msg('PLANT_REMOVED'));
+  }
   else next(LTRes.msg('PLANT_NOT_VALID'));
 }
 

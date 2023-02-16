@@ -19,7 +19,7 @@ export const generateParser: RequestHandler = (req, res, next) => {
 export const integers = (list: any) => {
   return (req: Request, res: Response, next: NextFunction) => {
     for (const field in list) {
-      let place = (
+      const place = (
         req.body[field] ? req.body
         : req.params[field] ? req.params
         : null
