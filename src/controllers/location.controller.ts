@@ -121,6 +121,9 @@ const findOne: RequestHandler = async (req, res, next) => {
         photos: {
           take: 1,
           select: { images: true }
+        },
+        specie: {
+          select: { name: true, commonName: true }
         }
       }
     };

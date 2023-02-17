@@ -83,15 +83,17 @@ model Plant {
   potType     String?     @db.VarChar(60)
   potSize     Int?
   soil        String?     @db.VarChar(60)
-  photos      Photo[]
+  photos      Photo[]     @relation("photos")
+  cover       Photo?      @relation("cover", fields: [coverId], references: [id])
+  coverId     Int?
   notifications Notification[]
-  public      Boolean    @default(false)
-  location    Location   @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  public      Boolean     @default(false)
+  location    Location    @relation(fields: [locationId], references: [id], onDelete: Cascade)
   locationId  Int
-  owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner       User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId     Int
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 }
 
 enum Condition {
@@ -120,8 +122,9 @@ model Photo {
   takenAt     DateTime   @default(now())
   hash        Hash       @relation(fields: [hashId], references: [id], onDelete: Cascade)
   hashId      Int
-  plant       Plant?     @relation(fields: [plantId], references: [id], onDelete: SetNull)
+  plant       Plant?     @relation("photos", fields: [plantId], references: [id], onDelete: SetNull)
   plantId     Int?
+  cover       Plant[]    @relation("cover")
   owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId     Int
   createdAt   DateTime   @default(now())
