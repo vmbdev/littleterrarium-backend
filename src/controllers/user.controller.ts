@@ -18,7 +18,7 @@ const removePassword = (user: User): User => {
 }
 
 const isUsernameValid = (username: string): boolean => {
-  const regexp = new RegExp(`^(?=.{${usernameConfig.minLength},${usernameConfig.maxLength}}$)(?!.*[_.]{2})[a-zA-Z0-9._-]+$`);
+  const regexp = new RegExp(`^(?=.{${usernameConfig.minLength},${usernameConfig.maxLength}}$)[a-zA-Z0-9._-]+$`);
 
   return regexp.test(username);
 }
@@ -43,7 +43,7 @@ const register: RequestHandler = async (req, res, next) => {
 
     else {
       if (((field === 'username') && !isUsernameValid(req.body.username)) || ((field === 'email') && !isEmail(req.body.email))) {
-          return next(LTRes.msg('USER_INVALID_FIELD').errorField(field));
+          return next(LTRes.msg('USER_FIELD_INVALID').errorField(field));
       }
 
       else data[field] = req.body[field];
@@ -73,7 +73,7 @@ const register: RequestHandler = async (req, res, next) => {
     res.send(LTRes.msg('USER_CREATED').user(removePassword(user)));
   } catch (err: any) {
     if (err.code === 'P2002') {
-      next(LTRes.msg('USER_FIELD').errorField(err.meta.target[0]));
+      next(LTRes.msg('USER_FIELD_EXISTS').errorField(err.meta.target[0]));
     }
     else next(LTRes.createCode(500));
   }
@@ -254,6 +254,10 @@ const passwordRequirements: RequestHandler = (req, res, next) => {
   res.send(Password.requirements());
 }
 
+const usernameRequirements: RequestHandler = (req, res, next) => {
+  res.send(usernameConfig);
+}
+
 export default {
   register,
   find,
@@ -265,5 +269,6 @@ export default {
   restore,
   verify,
   checkPassword,
-  passwordRequirements
+  passwordRequirements,
+  usernameRequirements
 };
