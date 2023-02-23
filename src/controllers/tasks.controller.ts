@@ -23,7 +23,7 @@ const find: RequestHandler = async (req, res, next) => {
         }
       },
       photos: {
-        take: 1,
+        take: -1,
         select: {
           images: true
         }

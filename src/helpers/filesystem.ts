@@ -17,7 +17,6 @@ export type LocalFile = {
   fieldname?: string,
   mimetype?: string,
   size?: number,
-  url?: Image,
   path: Image,
   webp?: Image
 }

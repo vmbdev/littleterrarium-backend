@@ -1,5 +1,14 @@
 import { Location, Photo, Plant, Specie, User } from "@prisma/client"
 
+export type NavigationData = {
+  prev?: {
+    id: number
+  },
+  next?: {
+    id: number
+  }
+}
+
 /**
  * Chainable class for HTTP responses
  * 
@@ -22,7 +31,9 @@ export class LTRes {
     plant?: Plant
     plants?: Plant[]
     specie?: Specie
-    species?: Specie[]
+    species?: Specie[],
+    plantId?: number,
+    navigation?: NavigationData
   }
   errorData?: {
     field?: string
@@ -122,6 +133,20 @@ export class LTRes {
     if (!this.data) this.data = {};
 
     this.data.species = species;
+    return this;
+  }
+
+  plantId(id: number): LTRes {
+    if (!this.data) this.data = {};
+
+    this.data.plantId = id;
+    return this;
+  }
+
+  navigation(navigationData: NavigationData): LTRes {
+    if (!this.data) this.data = {};
+    if (navigationData) this.data.navigation = navigationData;
+
     return this;
   }
 

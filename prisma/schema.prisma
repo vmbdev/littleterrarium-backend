@@ -108,7 +108,7 @@ model Hash {
   id          Int        @id @default(autoincrement())
   hash        String     @unique
   references  Int        @default(1)
-  localPath   Json
+  // localPath   Json
   photos      Photo[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -116,6 +116,9 @@ model Hash {
 
 model Photo {
   id          Int        @id @default(autoincrement())
+  // Even though duplication control is made through the Hash table, and that
+  // we can have several photos with the same "images" field, it simplifies
+  // querying over having it in the Hash table
   images      Json
   description String?    @db.VarChar(300)
   public      Boolean    @default(false)

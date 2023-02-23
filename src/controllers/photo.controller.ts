@@ -1,7 +1,8 @@
 import { RequestHandler } from 'express';
 import prisma from "../prismainstance";
-import { createPhoto, removePhoto } from '../helpers/photomanager';
+import { createPhoto, getPhotosForNavigation, removePhoto } from '../helpers/photomanager';
 import { LTRes } from '../helpers/ltres';
+import { Photo } from '@prisma/client';
 
 const create: RequestHandler = async (req, res, next) => {
   if (!req.disk.files || (req.disk.files.length === 0)) return next(LTRes.msg('PHOTO_NOT_FOUND'));
@@ -22,9 +23,9 @@ const create: RequestHandler = async (req, res, next) => {
   }
 
   const ops = req.disk.files.map((file) => createPhoto(data, file));
-  
+
   await prisma.$transaction(ops);
-  res.send(LTRes.msg('PHOTOS_CREATED'));
+  res.send(LTRes.msg('PHOTOS_CREATED').plantId(data.plantId));
 }
 
 const find: RequestHandler = async (req, res, next) => {
@@ -52,14 +53,32 @@ const find: RequestHandler = async (req, res, next) => {
 const findOne: RequestHandler = async (req, res, next) => {
   const query = {
     where: { id: req.parser.id },
-    select: { id: true, images: true, description: true, public: true, ownerId: true, plantId: true, takenAt: true }
+    select: {
+      id: true,
+      images: true,
+      description: true,
+      public: true,
+      ownerId: true,
+      plantId: true,
+      takenAt: true
+    }
   };
 
   const photo = await prisma.photo.findUnique(query);
 
   // if requesting user is not the owner, send only if it's public
   if (photo) {
-    if ((photo.ownerId === req.auth.userId) || photo.public) res.send(photo);
+    if ((photo.ownerId === req.auth.userId) || photo.public) {
+      let msg = LTRes.msg('PHOTO').photo(photo as Photo);
+
+      if ((req.query.navigation === 'true') && photo.plantId) {
+        const navigation = await getPhotosForNavigation(photo.id, photo.plantId);
+
+        if (navigation) msg = msg.navigation(navigation);
+      }
+
+      res.send(msg);
+    }
     else return next(LTRes.createCode(403));
   }
   else next(LTRes.msg('PHOTO_NOT_FOUND').setCode(404));

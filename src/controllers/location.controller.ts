@@ -33,7 +33,7 @@ const create: RequestHandler = async (req, res, next) => {
   }
 
   // if picture
-  if (req.disk.file) data.pictures = req.disk.file.url;
+  if (req.disk.file) data.pictures = { path: req.disk.file.path, webp: req.disk.file.webp ? req.disk.file.webp : undefined };
 
   data.ownerId = req.auth.userId;
   try {
@@ -164,7 +164,7 @@ const modify: RequestHandler = async (req, res, next) => {
 
   // picture
   if (req.body.removePicture) data.pictures = Prisma.JsonNull;
-  else if (req.disk.file) data.pictures = req.disk.file.url;
+  else if (req.disk.file) data.pictures = { path: req.disk.file.path, webp: req.disk.file.webp ? req.disk.file.webp : undefined };
 
   // it's already checked by auth.checkOwnership, but just to be extra paranoid
   // we add it to the where clause req.auth.userId is authorised by auth middleware

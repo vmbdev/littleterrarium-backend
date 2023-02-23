@@ -61,7 +61,7 @@ const register: RequestHandler = async (req, res, next) => {
   }
 
   // if avatar
-  if (req.disk.file) data.avatar = req.disk.file.url;
+  if (req.disk.file) data.avatar = { path: req.disk.file.path, webp: req.disk.file.webp ? req.disk.file.webp : undefined };
 
   try {
     const user = await prisma.user.create({ data });
@@ -185,7 +185,7 @@ const modify: RequestHandler = async (req, res, next) => {
 
   // picture
   if (req.body.removeAvatar) data.avatar = Prisma.JsonNull;
-  else if (req.disk.file) data.avatar = req.disk.file.url;
+  else if (req.disk.file) data.avatar = { path: req.disk.file.path, webp: req.disk.file.webp ? req.disk.file.webp : undefined };
 
   try {
     const user = await prisma.user.update({ where: { id: req.auth.userId }, data })

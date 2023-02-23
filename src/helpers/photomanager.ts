@@ -4,10 +4,13 @@
 
 import prisma from "../prismainstance";
 import filesystem, { LocalFile } from "./filesystem";
+import { NavigationData } from "./ltres";
 
 export const createPhoto = (data: any, file: LocalFile) => {
-  const photoData = { ...data };
-  photoData.images = file.url;
+  const photoData = {
+    ...data,
+    images: { path: file.path, webp: file.webp ? file.webp : undefined }
+  };
   
   // on both update or insert, we always create an entry in Photos
   return prisma.hash.upsert({
@@ -18,7 +21,6 @@ export const createPhoto = (data: any, file: LocalFile) => {
     },
     create: {
       hash: file.hash,
-      localPath: file.path,
       photos: { create: photoData }
     }
   });
@@ -37,21 +39,47 @@ export const removePhoto = async (id: number, ownerId?: number) => {
 
   // if there are no references left, we remove the Hash entry and the files
   if (references === 0) {
-    const { localPath } = await prisma.hash.delete({ where: { id: photo.hashId } });
+    await prisma.hash.delete({ where: { id: photo.hashId } });
 
-    const files: any[] = Object.values(localPath as any);
-    for (const file of files) {
-      await filesystem.removeFile(file);
+    const images: any = photo.images;
+
+    if (images) {
+      let files: any[] = [...Object.values(images.path)];
+
+      if (images.webp) files = [...files, ...Object.values(images.webp)];
+
+      for (const file of files) {
+        await filesystem.removeFile(file);
+      }
+
+      // FIXME: make it so it doesn't obliterate everything else in the directories
+      // if (files.length > 0) {
+      //   const dir: string[] = path.dirname(files[0]).split('/');
+      //   const data: string = dir.slice(0, dir.length - configFiles.folder.division + 1).join('/');
+
+      //   await filesystem.removeDir(data);
+      // }
     }
-
-    //TODO: make it so it doesn't obliterate everything else in the directories
-    // if (files.length > 0) {
-    //   const dir: string[] = path.dirname(files[0]).split('/');
-    //   const data: string = dir.slice(0, dir.length - configFiles.folder.division + 1).join('/');
-
-    //   await filesystem.removeDir(data);
-    // }
   }
 
   return photo;
+}
+
+// TODO: check ownership / permission
+export const getPhotosForNavigation = async (id: number, plantId: number): Promise<NavigationData> => {
+  const nextPhoto = await prisma.photo.findFirst({
+    select: { id: true },
+    take: 1,
+    where: { plantId: plantId, id: { gt: id } },
+    orderBy: { id: "asc" },
+  });
+
+  const prevPhoto = await prisma.photo.findFirst({
+    select: { id: true },
+    take: 1,
+    where: { plantId: plantId, id: { lt: id } },
+    orderBy: { id: "desc" },
+  });
+
+  return { prev: prevPhoto ? prevPhoto : undefined, next: nextPhoto ? nextPhoto : undefined };
 }

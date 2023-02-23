@@ -39,14 +39,6 @@ const processFile = async (file: Express.Multer.File, options: DiskOptions) => {
   diskFile.mimetype = file.mimetype;
   diskFile.size = file.size;
 
-  if (options.protocol && options.host) {
-    diskFile.url = {
-      full: `${options.protocol}://${options.host}/${diskFile.path.full}`,
-      mid: `${options.protocol}://${options.host}/${diskFile.path.mid}`,
-      thumb: `${options.protocol}://${options.host}/${diskFile.path.thumb}`
-    }
-  }
-
   return diskFile;
 }
 
@@ -55,8 +47,6 @@ export const image = (directory?: string) => {
     if (req.file) {
       try {
         req.disk.file = await processFile(req.file, {
-          protocol: req.protocol,
-          host: req.get('host'),
           destiny: directory ? `user/${req.auth.userId}/${directory}/` : undefined
         });
       } catch (err: any) {
@@ -77,8 +67,6 @@ export const gallery = (directory?: string) => {
       for (const file in req.files) {
         try {
           const diskFile = await processFile((req.files as any)[file], {
-            protocol: req.protocol,
-            host: req.get('host'),
             destiny: directory ? `user/${req.auth.userId}/${directory}/` : undefined
           });
 

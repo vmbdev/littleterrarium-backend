@@ -2,6 +2,7 @@ import path from 'node:path';
 import { Dirent } from 'node:fs';
 import { stat, readdir } from 'node:fs/promises';
 import express, { Express } from 'express';
+import { LTRes } from './helpers/ltres';
 
 
 export const enableAngularRouting = async (app: Express, defaultLanguage?: string) => {
@@ -11,7 +12,7 @@ export const enableAngularRouting = async (app: Express, defaultLanguage?: strin
 
   app.get('/api/angular/locales', (req, res, next) => {
     if (languagesToSend.locales.length > 0) res.send(languagesToSend);
-    else next({ code: 400 });
+    else next(LTRes.createCode(400));
   });
 
   try {
