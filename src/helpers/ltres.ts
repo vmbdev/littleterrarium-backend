@@ -33,7 +33,8 @@ export class LTRes {
     specie?: Specie
     species?: Specie[],
     plantId?: number,
-    navigation?: NavigationData
+    navigation?: NavigationData,
+    other?: any
   }
   errorData?: {
     field?: string
@@ -147,6 +148,13 @@ export class LTRes {
     if (!this.data) this.data = {};
     if (navigationData) this.data.navigation = navigationData;
 
+    return this;
+  }
+
+  other(newData: any): LTRes {
+    if (!this.data) this.data = {};
+
+    this.data = { ...this.data, ...newData }
     return this;
   }
 

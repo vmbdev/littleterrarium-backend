@@ -60,16 +60,19 @@ const findOne: RequestHandler = async (req, res, next) => {
       public: true,
       ownerId: true,
       plantId: true,
-      takenAt: true
+      takenAt: true,
+      ...((req.query.cover === 'true') ? { plant: { select: { coverId: true } } } : { })
     }
   };
 
-  const photo = await prisma.photo.findUnique(query);
+  let photo = await prisma.photo.findUnique(query);
 
   // if requesting user is not the owner, send only if it's public
   if (photo) {
+    const plantCoverId = photo.plant?.coverId;
+
     if ((photo.ownerId === req.auth.userId) || photo.public) {
-      let msg = LTRes.msg('PHOTO').photo(photo as Photo);
+      let msg = LTRes.msg('PHOTO').photo(photo as Photo).other({ plantCoverId });
 
       if ((req.query.navigation === 'true') && photo.plantId) {
         const navigation = await getPhotosForNavigation(photo.id, photo.plantId);

@@ -94,10 +94,18 @@ const create : RequestHandler = async (req, res, next) => {
  */
 const find : RequestHandler = async (req, res, next) => {
   const query: any = {};
-  const photos: any = {
-    take: 1,
-    select: { id: true, images: true, public: true, takenAt: true }
-  };
+  let photos: any;
+
+  if (req.query.photos === 'true') {
+    photos = { select: { id: true, images: true, public: true, takenAt: true } };
+  }
+  // if user requests cover, we send both the cover relationship and one
+  // photo, in case the cover doesn't exists
+  else if (req.query.cover === 'true') {
+    photos = { take: 1, select: { images: true } };
+  }
+  else photos = null;
+
 
   // if asking for a different user, return only the ones that are public
   if (req.parser.userId && (req.parser.userId !== req.auth.userId)) {
@@ -105,9 +113,8 @@ const find : RequestHandler = async (req, res, next) => {
       ownerId: req.parser.userId,
       public: true
     };
-    photos.where = {
-      public: true
-    };
+
+    if (photos) photos.where = { public: true };
   }
   else query.where = { ownerId: req.auth.userId };
 
@@ -118,7 +125,8 @@ const find : RequestHandler = async (req, res, next) => {
   query.select = {
     id: true,
     customName: true,
-    photos,
+    photos: photos ? photos : false,
+    cover: (req.query.cover === 'true'),
     specie: {
       select: { name: true, commonName: true }
     }
@@ -137,17 +145,34 @@ const findOne: RequestHandler = async (req, res, next) => {
   const query: any = {
     where: { id: req.parser.id },
     include: {
-      photos: true,
+      // photos: true, //(req.query.photos === 'true'),
+      cover: (req.query.cover === 'true'),
       specie: true
     }
   };
+
+  if (req.query.photos === 'true') {
+    query.include.photos = {
+      select: { id: true, images: true, public: true, takenAt: true }
+    }
+  }
+  // if user requests cover, we send both the cover relationship and one
+  // photo, in case the cover doesn't exists
+  else if (req.query.cover === 'true') {
+    query.include.photos = {
+      take: 1,
+      select: { images: true }
+    }
+  }
+
   const plant = await prisma.plant.findUnique(query);
 
   // if requesting user is not the owner, send only if it's public
   if (plant) {
     if (plant.ownerId === req.auth.userId) res.send(plant);
     else if ((plant.ownerId !== req.auth.userId) && plant.public) {
-      // extremely inelegant, but Prisma doesn't add relations to interfaces in TypeScript so we can't access plant.photos
+      // extremely inelegant, but Prisma doesn't add relations to interfaces
+      // in TypeScript so we can't access plant.photos
       const plantWithPublicPhotos = plant as any;
 
       if (plantWithPublicPhotos.photos) {
@@ -167,9 +192,9 @@ const findOne: RequestHandler = async (req, res, next) => {
  */
 const modify: RequestHandler = async (req, res, next) => {
   const fields = [
-    'locationId', 'specieId', 'customName', 'description', 'condition',
+    'locationId', 'specieId', 'coverId', 'customName', 'description', 'condition',
     'waterFreq', 'waterLast', 'fertFreq', 'fertLast', 'fertType', 'potType',
-    'potSize', 'soil', 'public', 'removeSpecie'
+    'potSize', 'soil', 'public', 'removeSpecie', 'removeCover'
   ];
   const data: any = {};
 
@@ -187,6 +212,7 @@ const modify: RequestHandler = async (req, res, next) => {
         }
         case 'locationId':
         case 'specieId':
+        case 'coverId':
         case 'waterFreq':
         case 'fertFreq':
         case 'potSize': {
@@ -201,6 +227,10 @@ const modify: RequestHandler = async (req, res, next) => {
         }
         case 'removeSpecie': {
           data.specieId = null;
+          break;
+        }
+        case 'removeCover': {
+          data.coverId = null;
           break;
         }
         case 'public': {

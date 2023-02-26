@@ -23,12 +23,11 @@ const errorHandling: ErrorRequestHandler = async (err, req, res, next) => {
 
     if (error.code) {
       code = error.code;
-
-      if (!error.msg) error.msg = defaultMessages[error.code];
+      delete error.code;
+      
+      if (!error.msg) error.msg = defaultMessages[code];
     }
     else code = 400;
-
-    delete error.code;
 
     res.status(code).send(error);
   }

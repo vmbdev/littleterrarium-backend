@@ -16,12 +16,18 @@ const find: RequestHandler = async (req, res, next) => {
       customName: true,
       waterNext: true,
       fertNext: true,
+      cover: {
+        select: {
+          images: true
+        }
+      },
       specie: {
         select: {
           name: true,
           commonName: true
         }
       },
+      // in case the cover doesn't exists, we get one photo to represent
       photos: {
         take: -1,
         select: {

@@ -76,11 +76,18 @@ const find: RequestHandler = async (req, res, next) => {
 
     // a limit of 0 implies no limit
     plants.take = (limit && (limit > 0)) ? limit : undefined;
-    plants.select = { id: true, specieId: true, customName: true };
-    plants.select.photos = {
-      take: 1,
-      select: { images: true }
-    }
+    plants.select = { 
+      id: true,
+      specieId: true,
+      customName: true,
+      cover: {
+        select: { images: true }
+      },
+      photos: {
+        take: 1,
+        select: { images: true }
+      }
+    };
 
     query.select = {
       id: true,
@@ -118,6 +125,9 @@ const findOne: RequestHandler = async (req, res, next) => {
         specieId: true,
         customName: true,
         public: true,
+        cover: {
+          select: { images: true }
+        },
         photos: {
           take: 1,
           select: { images: true }

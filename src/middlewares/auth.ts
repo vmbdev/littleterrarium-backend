@@ -90,7 +90,7 @@ export const getModelDelegate = (model: string): any => {
  * This prevents an user creating something like a plant in a location not owned.
  * @param {string} model - The model to be looked up
  * @param {string} idField - The name of the ID field in the database (usually 'id')
- * @returns {function} - Express Middleware
+ * @returns {Function} - Express Middleware
  */
 export const checkRelationship = (model: string, idField: string) => {
   return async (req: Request, res: Response, next: NextFunction) => {
