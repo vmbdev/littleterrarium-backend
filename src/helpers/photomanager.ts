@@ -70,14 +70,14 @@ export const getPhotosForNavigation = async (id: number, plantId: number): Promi
   const nextPhoto = await prisma.photo.findFirst({
     select: { id: true },
     take: 1,
-    where: { plantId: plantId, id: { gt: id } },
+    where: { plantId, id: { gt: id } },
     orderBy: { id: "asc" },
   });
 
   const prevPhoto = await prisma.photo.findFirst({
     select: { id: true },
     take: 1,
-    where: { plantId: plantId, id: { lt: id } },
+    where: { plantId, id: { lt: id } },
     orderBy: { id: "desc" },
   });
 

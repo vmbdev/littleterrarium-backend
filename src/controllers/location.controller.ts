@@ -1,5 +1,5 @@
 import { RequestHandler } from 'express';
-import { Prisma, Light, Location, Plant } from '@prisma/client';
+import { Prisma, Light, Plant } from '@prisma/client';
 import prisma from '../prismainstance';
 import { LTRes } from '../helpers/ltres';
 
@@ -33,7 +33,12 @@ const create: RequestHandler = async (req, res, next) => {
   }
 
   // if picture
-  if (req.disk.file) data.pictures = { path: req.disk.file.path, webp: req.disk.file.webp ? req.disk.file.webp : undefined };
+  if (req.disk.file) {
+    data.pictures = {
+      path: req.disk.file.path,
+      webp: req.disk.file.webp ? req.disk.file.webp : undefined
+    };
+  }
 
   data.ownerId = req.auth.userId;
   try {
@@ -112,7 +117,15 @@ const find: RequestHandler = async (req, res, next) => {
 const findOne: RequestHandler = async (req, res, next) => {
   const query: any = {
     where: { id: req.parser.id },
-    select: { id: true, name: true, pictures: true, light: true, public: true, plants: false, ownerId: true }
+    select: {
+      id: true,
+      name: true,
+      pictures: true,
+      light: true,
+      public: true,
+      plants: false,
+      ownerId: true
+    }
    };
 
   if (req.query.plants === 'true') {
@@ -125,6 +138,7 @@ const findOne: RequestHandler = async (req, res, next) => {
         specieId: true,
         customName: true,
         public: true,
+        createdAt: true,
         cover: {
           select: { images: true }
         },
@@ -145,7 +159,8 @@ const findOne: RequestHandler = async (req, res, next) => {
     // if requesting user is not the owner, send only if it's public
     if (location.ownerId === req.auth.userId) res.send(location);
     else if ((location.ownerId !== req.auth.userId) && location.public) {
-      // extremely inelegant, but Prisma doesn't add relations to interfaces so we can't access location.plants
+      // extremely inelegant, but Prisma doesn't add relations to interfaces
+      // so we can't access location.plants
       const locationWithPublicPlants = location as any;
 
       if (locationWithPublicPlants.plants) {
@@ -174,7 +189,12 @@ const modify: RequestHandler = async (req, res, next) => {
 
   // picture
   if (req.body.removePicture) data.pictures = Prisma.JsonNull;
-  else if (req.disk.file) data.pictures = { path: req.disk.file.path, webp: req.disk.file.webp ? req.disk.file.webp : undefined };
+  else if (req.disk.file) {
+    data.pictures = {
+      path: req.disk.file.path,
+      webp: req.disk.file.webp ? req.disk.file.webp : undefined
+    };
+  }
 
   // it's already checked by auth.checkOwnership, but just to be extra paranoid
   // we add it to the where clause req.auth.userId is authorised by auth middleware

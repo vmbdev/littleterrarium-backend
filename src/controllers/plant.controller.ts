@@ -99,12 +99,24 @@ const find : RequestHandler = async (req, res, next) => {
   if (req.query.photos === 'true') {
     photos = { select: { id: true, images: true, public: true, takenAt: true } };
   }
+  else if (req.query.cover === 'true') {
   // if user requests cover, we send both the cover relationship and one
   // photo, in case the cover doesn't exists
-  else if (req.query.cover === 'true') {
     photos = { take: 1, select: { images: true } };
   }
   else photos = null;
+
+  // Sorting by create time or by plant/specie name
+  // if (req.query.sortby) {
+  //   let sortMode;
+
+  //   if (req.query.sort && ((req.query.sort === 'asc') || req.query.sort === 'desc')) sortMode = req.query.sort;
+  //   else sortMode = 'asc';
+
+  //   if (req.query.sortby === 'created') query.orderBy = { id: sortMode };
+  //   else if (req.query.sortby === 'name') query.orderBy = [{ customName: sortMode }, { specie: { name: sortMode } }];
+  //   else if (req.query.sortby === 'specie') query.orderBy = [{ specie: { name: sortMode } }, { customName: sortMode }];
+  // }
 
 
   // if asking for a different user, return only the ones that are public
@@ -125,6 +137,7 @@ const find : RequestHandler = async (req, res, next) => {
   query.select = {
     id: true,
     customName: true,
+    createdAt: true,
     photos: photos ? photos : false,
     cover: (req.query.cover === 'true'),
     specie: {
@@ -207,6 +220,13 @@ const modify: RequestHandler = async (req, res, next) => {
             data.condition = Condition[req.body.condition as Condition];
           }
           else return next(LTRes.msg('PLANT_CONDITION'));
+
+          break;
+        }
+        case 'customName': {
+          // otherwise it screws sorting
+          if (req.body.customName === '') data.customName = null;
+          else data.customName = req.body.customName;
 
           break;
         }
