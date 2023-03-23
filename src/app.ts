@@ -13,7 +13,7 @@ import notifications from './helpers/notifications';
 import errorHandling from './middlewares/errorhandling';
 import { generateAuth } from './middlewares/auth';
 import { generateParser } from './middlewares/parser';
-import { server as serverConfig } from '../littleterrarium.config';
+import { server, server as serverConfig } from '../littleterrarium.config';
 import { generateDisk } from './middlewares/disk';
 
 declare module 'express-session' {
@@ -29,17 +29,23 @@ mkdirSync('temp', { recursive: true });
 
 const app: Express = express();
 
-if (serverConfig.useCors && serverConfig.corsOrigin) {
-  app.use(cors({
-    credentials: true,
-    origin: serverConfig.corsOrigin
-  }));
-}
-else {
-  app.use(cors({
-    origin: '*'
-  }))
-}
+// enable Android & iOS Capacitor builds if user CORS is disabled
+let allowedOrigins;
+
+if (serverConfig.useCors && serverConfig.corsOrigin) allowedOrigins = serverConfig.corsOrigin;
+else allowedOrigins = [
+  'capacitor://localhost',
+  'ionic://localhost',
+  'http://localhost',
+  'http://localhost:8080',
+  'http://localhost:8100',
+];
+
+app.use(cors({
+  credentials: true,
+  origin: allowedOrigins
+}));
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
