@@ -31,9 +31,14 @@ const app: Express = express();
 
 if (serverConfig.useCors && serverConfig.corsOrigin) {
   app.use(cors({
-      credentials: true,
-      origin: serverConfig.corsOrigin
+    credentials: true,
+    origin: serverConfig.corsOrigin
   }));
+}
+else {
+  app.use(cors({
+    origin: '*'
+  }))
 }
 
 app.use(express.json());
