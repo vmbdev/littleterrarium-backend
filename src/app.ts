@@ -13,7 +13,7 @@ import notifications from './helpers/notifications';
 import errorHandling from './middlewares/errorhandling';
 import { generateAuth } from './middlewares/auth';
 import { generateParser } from './middlewares/parser';
-import { server, server as serverConfig } from '../littleterrarium.config';
+import { server as serverConfig } from '../littleterrarium.config';
 import { generateDisk } from './middlewares/disk';
 
 declare module 'express-session' {
@@ -23,10 +23,10 @@ declare module 'express-session' {
     userId: number,
   }
 }
-
 mkdirSync('public', { recursive: true });
 mkdirSync('temp', { recursive: true });
 
+const isProduction: boolean = process.env.NODE_ENV === 'production';
 const app: Express = express();
 
 // enable Android & iOS Capacitor builds if user CORS is disabled
@@ -46,18 +46,19 @@ app.use(cors({
   origin: allowedOrigins
 }));
 
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(
   session({
+    proxy: isProduction,
     secret: serverConfig.session.secret,
     resave: true,
     saveUninitialized: true,
     cookie: {
-      secure: false,
-      httpOnly: false,
+      secure: isProduction,
+      httpOnly: isProduction,
       maxAge: 30 * 24 * 60 * 60 * 1000,
+      sameSite: 'none'
     },
     store: new PrismaSessionStore(prisma,
       {

@@ -2,9 +2,9 @@
   "name": "littleterrarium-backend",
   "version": "1.0.0",
   "scripts": {
-    "start": "ts-node --esm ./src/server.ts",
-    "build": "tsc",
-    "dev": "ts-node-dev --rs --respawn --watch tsconfig.json,src,littleterrarium.config.ts --transpile-only src/server.ts",
+    "start": "cross-env NODE_ENV=production ts-node --esm ./src/server.ts",
+    "build": "cross-env NODE_ENV=production tsc",
+    "dev": "cross-env NODE_ENV=development ts-node-dev --rs --respawn --watch tsconfig.json,src,littleterrarium.config.ts --transpile-only src/server.ts",
     "db-species": "ts-node --esm ./utils/create_species.ts"
   },
   "private": true,
@@ -13,6 +13,7 @@
     "@quixo3/prisma-session-store": "^3.1.10",
     "bcrypt": "^5.1.0",
     "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
     "dayjs": "^1.11.5",
     "express": "^4.18.2",
     "express-async-errors": "^3.1.1",

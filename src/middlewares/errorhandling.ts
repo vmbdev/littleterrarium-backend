@@ -9,6 +9,8 @@ const defaultMessages: { [key: number]: string } = {
 }
 
 const errorHandling: ErrorRequestHandler = async (err, req, res, next) => {
+  if (process.env.NODE_ENV !== 'production') console.error(err);
+
   // remove temporary files that didn't get processed
   if (req.file) filesystem.removeFile(req.file.path);
   else if (req.files) {
