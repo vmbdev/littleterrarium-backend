@@ -70,7 +70,7 @@ export const storeImage = async (source: string, dest: string, settings: StoreIm
   const ext = settings.webpOnly ? 'webp' : await getImageExt(img);
   const filenames = getFilenames(settings.newFilename, ext ? ext : 'jpg');
 
-  const thumbnail = img.clone().resize({ width: 250, height: 250, fit: 'cover' });
+  const thumbnail = img.clone().resize({ width: 400, height: 400, fit: 'cover' });
   const middleSize = img.clone().resize({ width: 750, fit: 'contain', position: 'left top' });
 
   if (!settings.webpOnly) {
