@@ -269,6 +269,11 @@ const modify: RequestHandler = async (req, res, next) => {
         id: req.parser.id,
         ownerId: req.auth.userId
       },
+      // TODO: make it optional?
+      include: {
+        cover: true,
+        specie: true
+      },
       data
     });
 
@@ -296,6 +301,10 @@ const modify: RequestHandler = async (req, res, next) => {
         where: {
           id: req.parser.id,
           ownerId: req.auth.userId
+        },
+        include: {
+          cover: true,
+          specie: true
         },
         data: plantUpdatedData
       });
