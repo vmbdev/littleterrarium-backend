@@ -1,7 +1,7 @@
 import { RequestHandler } from 'express';
 import prisma from "../prismainstance";
-import { createPhoto, getPhotosForNavigation, removePhoto } from '../helpers/photomanager';
-import { LTRes } from '../helpers/ltres';
+import { createPhoto, removePhoto } from '../helpers/photomanager';
+import { LTRes, NavigationData } from '../helpers/ltres';
 import { Photo } from '@prisma/client';
 
 const create: RequestHandler = async (req, res, next) => {
@@ -25,6 +25,7 @@ const create: RequestHandler = async (req, res, next) => {
   const ops = req.disk.files.map((file) => createPhoto(data, file));
 
   await prisma.$transaction(ops);
+
   res.send(LTRes.msg('PHOTOS_CREATED').plantId(data.plantId));
 }
 
@@ -60,8 +61,7 @@ const findOne: RequestHandler = async (req, res, next) => {
       public: true,
       ownerId: true,
       plantId: true,
-      takenAt: true,
-      ...((req.query.cover === 'true') ? { plant: { select: { coverId: true } } } : { })
+      takenAt: true
     }
   };
 
@@ -69,22 +69,52 @@ const findOne: RequestHandler = async (req, res, next) => {
 
   // if requesting user is not the owner, send only if it's public
   if (photo) {
-    const plantCoverId = photo.plant?.coverId;
-
-    if ((photo.ownerId === req.auth.userId) || photo.public) {
-      let msg = LTRes.msg('PHOTO').photo(photo as Photo).other({ plantCoverId });
-
-      if ((req.query.navigation === 'true') && photo.plantId) {
-        const navigation = await getPhotosForNavigation(photo.id, photo.plantId);
-
-        if (navigation) msg = msg.navigation(navigation);
-      }
-
-      res.send(msg);
-    }
+    if ((photo.ownerId === req.auth.userId) || photo.public) res.send(photo);
     else return next(LTRes.createCode(403));
   }
   else next(LTRes.msg('PHOTO_NOT_FOUND').setCode(404));
+}
+
+const getNavigation: RequestHandler = async (req, res, next) => {
+  const currentPhoto = await prisma.photo.findUnique({
+    select: { plantId: true, ownerId: true },
+    where: { id: req.parser.id }
+  });
+
+  
+  if (currentPhoto) {
+    const requireBeingPublic = (currentPhoto.ownerId !== req.session.userId) ? true : undefined
+
+    const nextPhoto = await prisma.photo.findFirst({
+      select: { id: true },
+      take: 1,
+      where: {
+        plantId: currentPhoto?.plantId,
+        public: requireBeingPublic,
+        id: { gt: req.parser.id }
+      },
+      orderBy: { id: "asc" },
+    });
+
+    const prevPhoto = await prisma.photo.findFirst({
+      select: { id: true },
+      take: 1,
+      where: {
+        plantId: currentPhoto?.plantId,
+        public: requireBeingPublic,
+        id: { lt: req.parser.id }
+      },
+      orderBy: { id: "desc" },
+    });
+
+    const navigation: NavigationData = {
+      prev: prevPhoto ? prevPhoto : undefined,
+      next: nextPhoto ? nextPhoto : undefined
+    };
+
+    res.send(navigation);
+  }
+  else return next(LTRes.msg('PHOTO_NOT_FOUND').setCode(404));
 }
 
 // let's be conservative here:
@@ -109,7 +139,7 @@ const modify: RequestHandler = async (req, res, next) => {
       },
       data,
     });
-    res.send(LTRes.msg('PHOTO_UPDATED').photo(photo));
+    res.send(photo);
   } catch (err) {
     next(LTRes.msg('PHOTO_NOT_FOUND').setCode(404));
   }
@@ -120,7 +150,7 @@ const remove: RequestHandler = async (req, res, next) => {
     // auth is checked in middleware
     const photo = await removePhoto(req.parser.id, req.auth.userId!);
 
-    res.send(LTRes.msg('PHOTO_REMOVED').photo(photo));
+    res.send(LTRes.createCode(204));
   } catch (err) {
     next(LTRes.msg('PHOTO_NOT_FOUND').setCode(404));
   }
@@ -130,6 +160,7 @@ export default {
   create,
   find,
   findOne,
+  getNavigation,
   modify,
   remove
 };

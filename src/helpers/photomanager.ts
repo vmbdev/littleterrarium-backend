@@ -4,7 +4,6 @@
 
 import prisma from "../prismainstance";
 import filesystem, { LocalFile } from "./filesystem";
-import { NavigationData } from "./ltres";
 
 export const createPhoto = (data: any, file: LocalFile) => {
   const photoData = {
@@ -63,23 +62,4 @@ export const removePhoto = async (id: number, ownerId?: number) => {
   }
 
   return photo;
-}
-
-// TODO: check ownership / permission
-export const getPhotosForNavigation = async (id: number, plantId: number): Promise<NavigationData> => {
-  const nextPhoto = await prisma.photo.findFirst({
-    select: { id: true },
-    take: 1,
-    where: { plantId, id: { gt: id } },
-    orderBy: { id: "asc" },
-  });
-
-  const prevPhoto = await prisma.photo.findFirst({
-    select: { id: true },
-    take: 1,
-    where: { plantId, id: { lt: id } },
-    orderBy: { id: "desc" },
-  });
-
-  return { prev: prevPhoto ? prevPhoto : undefined, next: nextPhoto ? nextPhoto : undefined };
 }

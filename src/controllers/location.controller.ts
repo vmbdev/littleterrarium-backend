@@ -43,7 +43,7 @@ const create: RequestHandler = async (req, res, next) => {
   data.ownerId = req.auth.userId;
   try {
     const newLocation = await prisma.location.create({ data });
-    res.send(LTRes.msg('LOCATION_CREATED').location(newLocation));
+    res.send(newLocation);
   } catch (err) {
     next(LTRes.createCode(500));
   }
@@ -206,7 +206,7 @@ const modify: RequestHandler = async (req, res, next) => {
     data
   });
 
-  if (location) res.send(LTRes.msg('LOCATION_UPDATED').location(location));
+  if (location) res.send(location);
   else next(LTRes.msg('LOCATION_NOT_VALID'));
 }
 
@@ -218,7 +218,7 @@ const remove: RequestHandler = async (req, res, next) => {
     }
   });
 
-  if (location) res.send(LTRes.msg('LOCATION_REMOVED'));
+  if (location) res.send(LTRes.createCode(204));
   else next(LTRes.msg('LOCATION_NOT_VALID'));
 }
 

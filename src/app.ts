@@ -58,7 +58,7 @@ app.use(
       secure: isProduction,
       httpOnly: isProduction,
       maxAge: 30 * 24 * 60 * 60 * 1000,
-      sameSite: 'none'
+      sameSite: isProduction ? 'none' : undefined
     },
     store: new PrismaSessionStore(prisma,
       {

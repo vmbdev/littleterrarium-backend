@@ -22,6 +22,7 @@ router.get('/plant/:plantId',
   photo.find
 );
 router.get('/:id', parser.integers({ id: true }), photo.findOne);
+router.get('/:id/navigation', parser.integers({ id: true }), photo.getNavigation);
 router.put('/',
   auth.self,
   auth.checkOwnership('photo'),

@@ -37,7 +37,7 @@ const find: RequestHandler = async (req, res, next) => {
   if (!req.params.name) return next(LTRes.msg('SPECIE_NAME_NOT_VALID'));
 
   const name = req.params.name.toLowerCase();
-  const plants = await prisma.specie.findMany({
+  const species = await prisma.specie.findMany({
     take: 5,
     select: {
       id: true,
@@ -51,13 +51,13 @@ const find: RequestHandler = async (req, res, next) => {
     }
   });
 
-  res.send(plants);
+  res.send(species);
 }
 
 const findOne: RequestHandler = async (req, res, next) => {
-  const plant = await prisma.specie.findUnique({ where: { id: req.parser.id } });
+  const specie = await prisma.specie.findUnique({ where: { id: req.parser.id } });
 
-  if (plant) res.send(plant);
+  if (specie) res.send(specie);
   else next(LTRes.msg('SPECIE_NOT_VALID'));
 }
 

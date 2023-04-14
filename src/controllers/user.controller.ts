@@ -70,7 +70,7 @@ const register: RequestHandler = async (req, res, next) => {
     req.session.role = user.role;
     req.session.userId = user.id;
 
-    res.send(LTRes.msg('USER_CREATED').user(removePassword(user)));
+    res.send(removePassword(user));
   } catch (err: any) {
     if (err.code === 'P2002') {
       next(LTRes.msg('USER_FIELD_EXISTS').errorField(err.meta.target[0]));
@@ -190,7 +190,7 @@ const modify: RequestHandler = async (req, res, next) => {
   try {
     const user = await prisma.user.update({ where: { id: req.auth.userId }, data })
 
-    res.send(LTRes.msg('USER_UPDATED').user(removePassword(user)));
+    res.send(removePassword(user));
   } catch (err: any) {
     if (err.code === 'P2002') {
       return next(LTRes.msg('USER_FIELD').errorField(err.meta.target));
@@ -221,7 +221,7 @@ const signin: RequestHandler = async (req, res, next) => {
         req.session.role = user.role;
         req.session.userId = user.id;
 
-        res.send(LTRes.msg('USER_SIGNEDIN').user(removePassword(user)));
+        res.send(removePassword(user));
       }
       else next(LTRes.msg('USER_DATA_INCORRECT').setCode(401));
     }
@@ -232,7 +232,7 @@ const signin: RequestHandler = async (req, res, next) => {
 
 const logout: RequestHandler = (req, res, next) => {
   req.session.destroy(() => {
-    res.send(LTRes.msg('USER_LOGGED_OUT'));
+    res.send(LTRes.createCode(204));
   });
 }
 

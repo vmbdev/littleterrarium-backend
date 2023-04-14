@@ -34,7 +34,7 @@ export class LTRes {
     species?: Specie[],
     plantId?: number,
     navigation?: NavigationData,
-    other?: any
+    plantCoverId?: number
   }
   errorData?: {
     field?: string
@@ -151,10 +151,10 @@ export class LTRes {
     return this;
   }
 
-  other(newData: any): LTRes {
+  plantCoverId(id: number): LTRes {
     if (!this.data) this.data = {};
 
-    this.data = { ...this.data, ...newData }
+    this.data.plantCoverId = id;
     return this;
   }
 

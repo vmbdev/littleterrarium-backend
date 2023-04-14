@@ -8,11 +8,11 @@ import tasksRoutes from './tasks.routes';
 
 const router = Router();
 
-router.use('/user', userRoutes);
-router.use('/location', locationRoutes);
-router.use('/plant', plantRoutes);
-router.use('/specie', specieRoutes);
-router.use('/photo', photoRoutes);
+router.use('/users', userRoutes);
+router.use('/locations', locationRoutes);
+router.use('/plants', plantRoutes);
+router.use('/species', specieRoutes);
+router.use('/photos', photoRoutes);
 router.use('/tasks', tasksRoutes);
 
 export default router;

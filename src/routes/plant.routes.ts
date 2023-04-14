@@ -1,4 +1,4 @@
-import { RequestHandler, Router } from 'express';
+import { Router } from 'express';
 import auth from '../middlewares/auth';
 import parser from '../middlewares/parser';
 import plant from '../controllers/plant.controller';
@@ -22,6 +22,7 @@ router.get('/user/:userId', parser.integers({ userId: true }), plant.find);
 router.get('/user/:userId/location/:locationId', parser.integers({ userId: true, locationId: true }), plant.find);
 router.get('/location/:locationId', parser.integers({ locationId: true }), plant.find);
 router.get('/:id?', parser.integers({ id: false }), plant.findOne);
+router.get('/:id/cover', parser.integers({ id: true }), plant.getCover)
 router.put('/',
   auth.self,
   auth.checkOwnership('plant'),

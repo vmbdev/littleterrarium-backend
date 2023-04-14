@@ -82,7 +82,7 @@ const create : RequestHandler = async (req, res, next) => {
   try {
     const plant = await prisma.plant.create({ data });
 
-    res.send(LTRes.msg('PLANT_CREATED').plant(plant));
+    res.send(plant);
   } catch (err) {
     next(LTRes.createCode(500));
   }
@@ -310,9 +310,24 @@ const modify: RequestHandler = async (req, res, next) => {
       });
     }
 
-    res.send(LTRes.msg('PLANT_UPDATED').plant(plant));
+    res.send(plant);
   } catch (err) {
     next(LTRes.msg('PLANT_NOT_VALID'));
+  }
+}
+
+const getCover: RequestHandler = async (req, res, next) => {
+  if (req.parser.id) {
+    const plant = await prisma.plant.findUnique({
+      select: { coverId: true, ownerId: true, public: true },
+      where: { id: req.parser.id }
+    });
+
+    if (plant) {
+      if ((plant.ownerId === req.auth.userId) || plant.public) res.send({ coverId: plant.coverId });
+      else return next(LTRes.createCode(403));
+    }
+    else next(LTRes.msg('PLANT_NOT_FOUND').setCode(404));
   }
 }
 
@@ -333,7 +348,7 @@ const remove: RequestHandler = async (req, res, next) => {
     for (const photo of plant.photos) {
       removePhoto(photo.id, req.auth.userId);
     }
-    res.send(LTRes.msg('PLANT_REMOVED'));
+    res.send(LTRes.createCode(204));
   }
   else next(LTRes.msg('PLANT_NOT_VALID'));
 }
@@ -342,6 +357,7 @@ export default {
   create,
   find,
   findOne,
+  getCover,
   modify,
   remove
 };

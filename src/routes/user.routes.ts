@@ -13,6 +13,7 @@ router.get('/id/:id?', parser.integers({ id: true }), user.findById);
 router.put('/', auth.self,  uploader.single('avatar'), disk.image('avatar'), user.modify);
 router.delete('/:id', auth.admin, user.remove);
 router.post('/signin', user.signin);
+// FIXME: make it post, to avoid prefetching errors
 router.get('/logout', user.logout);
 router.post('/restore', user.restore);
 router.get('/validate/:key', user.verify);
