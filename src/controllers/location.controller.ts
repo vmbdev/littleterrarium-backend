@@ -53,7 +53,6 @@ const find: RequestHandler = async (req, res, next) => {
   const query: any = {
     orderBy: { createdAt: 'asc' },
   };
-  const plants: any = {}
 
   // if asking for a different user, return only the ones that are public
   if (req.parser.userId && (req.parser.userId !== req.auth.userId)) {
@@ -61,9 +60,6 @@ const find: RequestHandler = async (req, res, next) => {
       ownerId: req.parser.userId,
       public: true
     };
-    plants.where = {
-      public: true
-    }
   }
   else query.where = { ownerId: req.auth.userId };
 
@@ -76,34 +72,48 @@ const find: RequestHandler = async (req, res, next) => {
     };
   }
 
-  else if (req.query.plants === 'true') {
-    const limit: number | undefined = req.query.limit ? +req.query.limit : undefined;
-
-    // a limit of 0 implies no limit
-    plants.take = (limit && (limit > 0)) ? limit : undefined;
-    plants.select = { 
-      id: true,
-      specieId: true,
-      customName: true,
-      cover: {
-        select: { images: true }
-      },
-      photos: {
-        take: 1,
-        select: { images: true }
-      }
-    };
-
-    query.select = {
-      id: true,
-      name: true,
-      pictures: true,
-      plants
-    };
-  }
-
   const locations = await prisma.location.findMany(query);
   res.send(locations);
+}
+
+const findPlants: RequestHandler = async (req, res, next) => {
+  const location = await prisma.location.findUnique({
+    select: { public: true, ownerId: true },
+    where: { id: req.parser.id }
+  });
+
+  if (!location) return next(LTRes.createCode(404));
+  else {
+    if ((!location.public) && (location.ownerId !== req.auth.userId)) {
+      return next(LTRes.createCode(403));
+    }
+
+    else {
+      const limit: number | undefined = (req.query.limit && (+req.query.limit > 0)) ? +req.query.limit : undefined;
+      const query: any = {
+        take: limit,
+        include: { 
+          cover: {
+            select: { images: true }
+          },
+          photos: {
+            take: 1,
+            select: { images: true }
+          },
+          specie: {
+            select: { name: true, commonName: true }
+          }
+        },
+        where: {
+          locationId: req.parser.id
+        }
+      }
+ 
+      const plants = await prisma.plant.findMany(query);
+  
+      res.send(plants);
+    }
+  }
 }
 
 /**
@@ -115,49 +125,11 @@ const find: RequestHandler = async (req, res, next) => {
  * @param {Express.NextFunction} next 
  */
 const findOne: RequestHandler = async (req, res, next) => {
-  const query: any = {
-    where: { id: req.parser.id },
-    select: {
-      id: true,
-      name: true,
-      pictures: true,
-      light: true,
-      public: true,
-      plants: false,
-      ownerId: true
-    }
-   };
-
-  if (req.query.plants === 'true') {
-    const limit: number | undefined = req.query.limit ? +req.query.limit : undefined;
-
-    query.select.plants = {
-      take: (limit && (limit > 0)) ? limit : undefined,
-      select: {
-        id: true,
-        specieId: true,
-        customName: true,
-        public: true,
-        createdAt: true,
-        cover: {
-          select: { images: true }
-        },
-        photos: {
-          take: 1,
-          select: { images: true }
-        },
-        specie: {
-          select: { name: true, commonName: true }
-        }
-      }
-    };
-  }
-
-  const location = await prisma.location.findUnique(query);
+  const location = await prisma.location.findUnique({ where: { id: req.parser.id } });
 
   if (location) {
-    // if requesting user is not the owner, send only if it's public
     if (location.ownerId === req.auth.userId) res.send(location);
+    // if requesting user is not the owner, send only if it's public
     else if ((location.ownerId !== req.auth.userId) && location.public) {
       // extremely inelegant, but Prisma doesn't add relations to interfaces
       // so we can't access location.plants
@@ -225,6 +197,7 @@ const remove: RequestHandler = async (req, res, next) => {
 export default {
   create,
   find,
+  findPlants,
   findOne,
   modify,
   remove

@@ -1,10 +1,18 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { LTRes } from '../helpers/ltres';
 
+export interface ParserParameters {
+  [key: string]: any
+}
+
+export interface ParserOptions {
+  [key: string]: boolean
+}
+
 declare global {
   namespace Express {
     interface Request {
-      parser: any
+      parser: ParserParameters
     }
   }
 }
@@ -16,7 +24,7 @@ export const generateParser: RequestHandler = (req, res, next) => {
 }
 
 // TODO: define body/params/query implicitly
-export const integers = (list: any) => {
+export const integers = (list: ParserOptions) => {
   return (req: Request, res: Response, next: NextFunction) => {
     for (const field in list) {
       const place = (

@@ -16,11 +16,12 @@ router.post('/',
   disk.gallery(),
   photo.create
 );
-router.get('/', auth.self, photo.find);
-router.get('/plant/:plantId',
-  parser.integers({ plantId: true }),
-  photo.find
-);
+// router.get('/', auth.self, photo.find);
+// router.get('/plant/:plantId',
+//   parser.integers({ plantId: true }),
+//   photo.find
+// );
+router.get('/', photo.find);
 router.get('/:id', parser.integers({ id: true }), photo.findOne);
 router.get('/:id/navigation', parser.integers({ id: true }), photo.getNavigation);
 router.put('/',
@@ -30,6 +31,11 @@ router.put('/',
   parser.integers({ id: true }),
   photo.modify
 );
-router.delete('/:id', auth.self, auth.checkOwnership('photo'), parser.integers({ id: true }), photo.remove);
+router.delete('/:id',
+  auth.self,
+  auth.checkOwnership('photo'),
+  parser.integers({ id: true }),
+  photo.remove
+);
 
 export default router;

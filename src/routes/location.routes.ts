@@ -12,6 +12,7 @@ router.post('/', auth.self, uploader.single('picture'), disk.image('location'), 
 router.get('/', auth.self, location.find);
 router.get('/user/:userId', parser.integers({ userId: true }), location.find);
 router.get('/:id', parser.integers({ id: true }), location.findOne);
+router.get('/:id/plants', parser.integers({ id: true }), location.findPlants);
 router.put('/',
   auth.self,
   uploader.single('picture'),

@@ -96,28 +96,12 @@ const find : RequestHandler = async (req, res, next) => {
   const query: any = {};
   let photos: any;
 
-  if (req.query.photos === 'true') {
-    photos = { select: { id: true, images: true, public: true, takenAt: true } };
-  }
-  else if (req.query.cover === 'true') {
   // if user requests cover, we send both the cover relationship and one
   // photo, in case the cover doesn't exists
+  if (req.query.cover === 'true') {
     photos = { take: 1, select: { images: true } };
   }
   else photos = null;
-
-  // Sorting by create time or by plant/specie name
-  // if (req.query.sortby) {
-  //   let sortMode;
-
-  //   if (req.query.sort && ((req.query.sort === 'asc') || req.query.sort === 'desc')) sortMode = req.query.sort;
-  //   else sortMode = 'asc';
-
-  //   if (req.query.sortby === 'created') query.orderBy = { id: sortMode };
-  //   else if (req.query.sortby === 'name') query.orderBy = [{ customName: sortMode }, { specie: { name: sortMode } }];
-  //   else if (req.query.sortby === 'specie') query.orderBy = [{ specie: { name: sortMode } }, { customName: sortMode }];
-  // }
-
 
   // if asking for a different user, return only the ones that are public
   if (req.parser.userId && (req.parser.userId !== req.auth.userId)) {
@@ -130,16 +114,9 @@ const find : RequestHandler = async (req, res, next) => {
   }
   else query.where = { ownerId: req.auth.userId };
 
-  // Can only get own user's location's plants. To get other user's, go through location controller
-  // this is to avoid having to check on location table whether it's public or not
-  if (req.parser.locationId) query.where.locationId = req.parser.locationId;
-
-  query.select = {
-    id: true,
-    customName: true,
-    createdAt: true,
+  query.include = {
     photos: photos ? photos : false,
-    cover: (req.query.cover === 'true'),
+    cover: photos ? true : false,
     specie: {
       select: { name: true, commonName: true }
     }
@@ -164,14 +141,14 @@ const findOne: RequestHandler = async (req, res, next) => {
     }
   };
 
-  if (req.query.photos === 'true') {
-    query.include.photos = {
-      select: { id: true, images: true, public: true, takenAt: true }
-    }
-  }
+  // if (req.query.photos === 'true') {
+  //   query.include.photos = {
+  //     select: { id: true, images: true, public: true, takenAt: true }
+  //   }
+  // }
   // if user requests cover, we send both the cover relationship and one
   // photo, in case the cover doesn't exists
-  else if (req.query.cover === 'true') {
+  if (req.query.cover === 'true') {
     query.include.photos = {
       take: 1,
       select: { images: true }
@@ -182,18 +159,7 @@ const findOne: RequestHandler = async (req, res, next) => {
 
   // if requesting user is not the owner, send only if it's public
   if (plant) {
-    if (plant.ownerId === req.auth.userId) res.send(plant);
-    else if ((plant.ownerId !== req.auth.userId) && plant.public) {
-      // extremely inelegant, but Prisma doesn't add relations to interfaces
-      // in TypeScript so we can't access plant.photos
-      const plantWithPublicPhotos = plant as any;
-
-      if (plantWithPublicPhotos.photos) {
-        plantWithPublicPhotos.photos = plantWithPublicPhotos.photos.filter((photo: Photo) => photo.public);
-      }
-
-      res.send(plantWithPublicPhotos);
-    }
+    if (plant.public || (plant.ownerId === req.auth.userId)) res.send(plant);
     else return next(LTRes.createCode(403));
   }
   else next(LTRes.msg('PLANT_NOT_FOUND').setCode(404));
@@ -316,6 +282,44 @@ const modify: RequestHandler = async (req, res, next) => {
   }
 }
 
+const getPhotos: RequestHandler = async (req, res, next) => {
+  const plant = await prisma.plant.findUnique({
+    select: { public: true, ownerId: true },
+    where: { id: req.parser.id }
+  });
+
+  if (!plant) return next(LTRes.createCode(404));
+  else {
+    if ((!plant.public) && (plant.ownerId !== req.auth.userId)) {
+      return next(LTRes.createCode(403));
+    }
+
+    else {
+      const query: any = {
+        where: {
+          plantId: req.parser.id
+        },
+        select: {
+          id: true,
+          images: true,
+          description: true,
+          public: true,
+          ownerId: true,
+          plantId: true,
+          takenAt: true
+        },
+        orderBy: {
+          takenAt: 'desc'
+        }
+      }
+ 
+      const photos = await prisma.photo.findMany(query);
+  
+      res.send(photos);
+    }
+  }
+}
+
 const getCover: RequestHandler = async (req, res, next) => {
   if (req.parser.id) {
     const plant = await prisma.plant.findUnique({
@@ -357,6 +361,7 @@ export default {
   create,
   find,
   findOne,
+  getPhotos,
   getCover,
   modify,
   remove

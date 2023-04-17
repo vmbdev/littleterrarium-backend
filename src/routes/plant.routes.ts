@@ -19,10 +19,9 @@ router.post('/',
 );
 router.get('/', auth.self, plant.find);
 router.get('/user/:userId', parser.integers({ userId: true }), plant.find);
-router.get('/user/:userId/location/:locationId', parser.integers({ userId: true, locationId: true }), plant.find);
-router.get('/location/:locationId', parser.integers({ locationId: true }), plant.find);
 router.get('/:id?', parser.integers({ id: false }), plant.findOne);
-router.get('/:id/cover', parser.integers({ id: true }), plant.getCover)
+router.get('/:id/photos', parser.integers({ id: true }), plant.getPhotos);
+router.get('/:id/cover', parser.integers({ id: true }), plant.getCover);
 router.put('/',
   auth.self,
   auth.checkOwnership('plant'),

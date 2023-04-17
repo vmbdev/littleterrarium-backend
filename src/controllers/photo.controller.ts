@@ -30,25 +30,26 @@ const create: RequestHandler = async (req, res, next) => {
 }
 
 const find: RequestHandler = async (req, res, next) => {
-  const query: any = {
-    select: { id: true, images: true, description: true, public: true, takenAt: true }
-  };
+  // const query: any = {
+  //   select: { id: true, images: true, description: true, public: true, takenAt: true }
+  // };
 
-  // if asking for a different user, return only the ones that are public
-  if (req.parser.userId && (req.parser.userId !== req.auth.userId)) {
-    query.where = {
-      ownerId: req.parser.userId,
-      public: true
-    }
-  }
-  else query.where = { ownerId: req.auth.userId };
+  // // if asking for a different user, return only the ones that are public
+  // if (req.parser.userId && (req.parser.userId !== req.auth.userId)) {
+  //   query.where = {
+  //     ownerId: req.parser.userId,
+  //     public: true
+  //   }
+  // }
+  // else query.where = { ownerId: req.auth.userId };
 
-  if (req.parser.plantId) query.where.plantId = req.parser.plantId;
+  // if (req.parser.plantId) query.where.plantId = req.parser.plantId;
 
-  const photos = await prisma.photo.findMany(query);
+  // const photos = await prisma.photo.findMany(query);
 
-  if (photos.length > 0) res.send(photos);
-  else next(LTRes.msg('PHOTO_NOT_FOUND').setCode(404));
+  // if (photos.length > 0) res.send(photos);
+  // else next(LTRes.msg('PHOTO_NOT_FOUND').setCode(404));
+  return next(LTRes.createCode(404));
 }
 
 const findOne: RequestHandler = async (req, res, next) => {
@@ -77,7 +78,7 @@ const findOne: RequestHandler = async (req, res, next) => {
 
 const getNavigation: RequestHandler = async (req, res, next) => {
   const currentPhoto = await prisma.photo.findUnique({
-    select: { plantId: true, ownerId: true },
+    select: { plantId: true, ownerId: true, takenAt: true },
     where: { id: req.parser.id }
   });
 
@@ -91,9 +92,11 @@ const getNavigation: RequestHandler = async (req, res, next) => {
       where: {
         plantId: currentPhoto?.plantId,
         public: requireBeingPublic,
-        id: { gt: req.parser.id }
+        takenAt: { lte: currentPhoto.takenAt },
+        id: { not: req.parser.id }
       },
-      orderBy: { id: "asc" },
+      orderBy: { takenAt: "desc" },
+
     });
 
     const prevPhoto = await prisma.photo.findFirst({
@@ -102,9 +105,10 @@ const getNavigation: RequestHandler = async (req, res, next) => {
       where: {
         plantId: currentPhoto?.plantId,
         public: requireBeingPublic,
-        id: { lt: req.parser.id }
+        takenAt: { gte: currentPhoto.takenAt },
+        id: { not: req.parser.id }
       },
-      orderBy: { id: "desc" },
+      orderBy: { takenAt: "asc" },
     });
 
     const navigation: NavigationData = {
@@ -147,8 +151,7 @@ const modify: RequestHandler = async (req, res, next) => {
 
 const remove: RequestHandler = async (req, res, next) => {
   try {
-    // auth is checked in middleware
-    const photo = await removePhoto(req.parser.id, req.auth.userId!);
+    await removePhoto(req.parser.id, req.auth.userId!);
 
     res.send(LTRes.createCode(204));
   } catch (err) {
