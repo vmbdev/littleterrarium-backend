@@ -2,7 +2,7 @@ import { RequestHandler } from 'express';
 import prisma from "../prismainstance";
 import { createPhoto, removePhoto } from '../helpers/photomanager';
 import { LTRes, NavigationData } from '../helpers/ltres';
-import { Photo } from '@prisma/client';
+import { Photo, Prisma } from '@prisma/client';
 
 const create: RequestHandler = async (req, res, next) => {
   if (!req.disk.files || (req.disk.files.length === 0)) return next(LTRes.msg('PHOTO_NOT_FOUND'));
@@ -85,30 +85,30 @@ const getNavigation: RequestHandler = async (req, res, next) => {
   
   if (currentPhoto) {
     const requireBeingPublic = (currentPhoto.ownerId !== req.session.userId) ? true : undefined
-
-    const nextPhoto = await prisma.photo.findFirst({
+    const query: Prisma.PhotoFindFirstArgs = {
       select: { id: true },
       take: 1,
-      where: {
-        plantId: currentPhoto?.plantId,
-        public: requireBeingPublic,
-        takenAt: { lte: currentPhoto.takenAt },
-        id: { not: req.parser.id }
+      skip: 1,
+      cursor: {
+        id: req.parser.id
       },
-      orderBy: { takenAt: "desc" },
+      where: {
+        plantId: currentPhoto.plantId,
+        public: requireBeingPublic
+      },
+    }
 
+    const nextPhoto = await prisma.photo.findFirst({
+      ...query,
+      orderBy: { takenAt: "desc" }
     });
 
     const prevPhoto = await prisma.photo.findFirst({
-      select: { id: true },
-      take: 1,
-      where: {
-        plantId: currentPhoto?.plantId,
-        public: requireBeingPublic,
-        takenAt: { gte: currentPhoto.takenAt },
-        id: { not: req.parser.id }
-      },
-      orderBy: { takenAt: "asc" },
+      ...query,
+      orderBy: [
+        { takenAt: "asc" },
+        { id: "desc" }
+      ],
     });
 
     const navigation: NavigationData = {
