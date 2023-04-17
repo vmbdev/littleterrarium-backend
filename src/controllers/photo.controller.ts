@@ -100,14 +100,17 @@ const getNavigation: RequestHandler = async (req, res, next) => {
 
     const nextPhoto = await prisma.photo.findFirst({
       ...query,
-      orderBy: { takenAt: "desc" }
+      orderBy: [
+        { takenAt: 'desc' },
+        { id: 'desc' }
+      ],
     });
 
     const prevPhoto = await prisma.photo.findFirst({
       ...query,
       orderBy: [
-        { takenAt: "asc" },
-        { id: "desc" }
+        { takenAt: 'asc' },
+        { id: 'asc' }
       ],
     });
 
