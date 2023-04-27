@@ -125,7 +125,21 @@ const findPlants: RequestHandler = async (req, res, next) => {
  * @param {Express.NextFunction} next 
  */
 const findOne: RequestHandler = async (req, res, next) => {
-  const location = await prisma.location.findUnique({ where: { id: req.parser.id } });
+  const query: Prisma.LocationFindUniqueArgs = {
+    where: {
+      id: req.parser.id
+    }
+  }
+
+  if (req.query.plantcount) {
+    query.include = {
+      _count: {
+        select: { plants: true }
+      }
+    };
+  }
+
+  const location = await prisma.location.findUnique(query);
 
   if (location) {
     if (location.ownerId === req.auth.userId) res.send(location);

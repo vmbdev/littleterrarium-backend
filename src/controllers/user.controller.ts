@@ -43,7 +43,7 @@ const register: RequestHandler = async (req, res, next) => {
 
     else {
       if (((field === 'username') && !isUsernameValid(req.body.username)) || ((field === 'email') && !isEmail(req.body.email))) {
-          return next(LTRes.msg('USER_FIELD_INVALID').errorField(field));
+        return next(LTRes.msg('USER_FIELD_INVALID').errorField(field));
       }
 
       else data[field] = req.body[field];
@@ -160,7 +160,7 @@ const modify: RequestHandler = async (req, res, next) => {
   for (const requestedField of Object.keys(req.body)) {
     if (fields.includes(requestedField)) {
       if (((requestedField === 'username') && !isUsernameValid(req.body.username)) || ((requestedField === 'email') && !isEmail(req.body.email))) {
-        return next(LTRes.msg('USER_INVALID_FIELD').errorField(requestedField));
+        return next(LTRes.msg('USER_FIELD_INVALID').errorField(requestedField));
       }
 
       else if (requestedField === 'password') {
@@ -193,7 +193,7 @@ const modify: RequestHandler = async (req, res, next) => {
     res.send(removePassword(user));
   } catch (err: any) {
     if (err.code === 'P2002') {
-      return next(LTRes.msg('USER_FIELD').errorField(err.meta.target));
+      return next(LTRes.msg('USER_FIELD_EXISTS').errorField(err.meta.target[0]));
     }
     else return next(LTRes.createCode(500));
   }

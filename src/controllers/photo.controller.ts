@@ -26,7 +26,7 @@ const create: RequestHandler = async (req, res, next) => {
 
   await prisma.$transaction(ops);
 
-  res.send(LTRes.msg('PHOTOS_CREATED').plantId(data.plantId));
+  res.send(LTRes.createCode(200).plantId(data.plantId));
 }
 
 const find: RequestHandler = async (req, res, next) => {
