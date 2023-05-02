@@ -1,9 +1,12 @@
 import type { RequestHandler } from 'express';
-import { Condition, Photo } from '@prisma/client'
+import { Condition, Prisma } from '@prisma/client'
 import { LTRes } from '../helpers/ltres';
 import { removePhoto } from '../helpers/photomanager';
+import { prepareForSortName } from '../helpers/textparser';
 import prisma from '../prismainstance';
 import dayjs from 'dayjs';
+
+
 
 /**
  * Express Middleware that creates a Plant object in the database.
@@ -62,6 +65,12 @@ const create : RequestHandler = async (req, res, next) => {
           data.public = ((req.body.public === true) || (req.body.public === 'true'));
           break;
         }
+        case 'customName': {
+          // if customName is present, it has priority for sortName
+          data.sortName = prepareForSortName(req.body.customName);
+          data.customName = req.body.customName;
+          break;
+        }
         default:
           data[field] = req.body[field];
       }
@@ -80,6 +89,11 @@ const create : RequestHandler = async (req, res, next) => {
   data.ownerId = req.auth.userId;
 
   try {
+    if (!data.customName && data.specieId) {
+      const specie = await prisma.specie.findUnique({ where: { id: data.specieId }});
+      data.sortName = specie?.name;
+    }
+
     const plant = await prisma.plant.create({ data });
 
     res.send(plant);
@@ -93,15 +107,15 @@ const create : RequestHandler = async (req, res, next) => {
  * The object contains one Photo object as well as the Specie object related to it.
  */
 const find : RequestHandler = async (req, res, next) => {
-  const query: any = {};
-  let photos: any;
+  const query: Prisma.PlantFindManyArgs = {};
+  let photos: Prisma.Plant$photosArgs | undefined;
 
   // if user requests cover, we send both the cover relationship and one
   // photo, in case the cover doesn't exists
   if (req.query.cover === 'true') {
     photos = { take: 1, select: { images: true } };
   }
-  else photos = null;
+  else photos = undefined;
 
   // if asking for a different user, return only the ones that are public
   if (req.parser.userId && (req.parser.userId !== req.auth.userId)) {
@@ -113,6 +127,15 @@ const find : RequestHandler = async (req, res, next) => {
     if (photos) photos.where = { public: true };
   }
   else query.where = { ownerId: req.auth.userId };
+
+  if (req.query.filter) {
+    query.where = {
+      ...query.where,
+      sortName: {
+        contains: prepareForSortName(req.query.filter as string),
+      }
+    }
+  }
 
   query.include = {
     photos: photos ? photos : false,
@@ -192,8 +215,10 @@ const modify: RequestHandler = async (req, res, next) => {
         case 'customName': {
           // otherwise it screws sorting
           if (req.body.customName === '') data.customName = null;
-          else data.customName = req.body.customName;
-
+          else {
+            data.customName = req.body.customName;
+            data.sortName = prepareForSortName(req.body.customName);
+          }
           break;
         }
         case 'locationId':
@@ -253,6 +278,14 @@ const modify: RequestHandler = async (req, res, next) => {
      * and date operations, it can be done with such trigger.
      * */
     const plantUpdatedData: any = {};
+
+    if (!plant.customName) {
+      if (plant.specieId) {
+        const specie = await prisma.specie.findUnique({ where: { id: plant.specieId }});
+        plantUpdatedData.sortName = specie?.name;
+      }
+      else plantUpdatedData.sortName = null;
+    }
 
     if (plant.waterFreq && plant.waterLast) {
       plantUpdatedData.waterNext = dayjs(plant.waterLast).add(plant.waterFreq, 'days').toDate();

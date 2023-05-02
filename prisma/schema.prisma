@@ -83,6 +83,7 @@ model Plant {
   potType     String?     @db.VarChar(60)
   potSize     Int?
   soil        String?     @db.VarChar(60)
+  sortName    String?     @db.VarChar(60)
   photos      Photo[]     @relation("photos")
   cover       Photo?      @relation("cover", fields: [coverId], references: [id])
   coverId     Int?

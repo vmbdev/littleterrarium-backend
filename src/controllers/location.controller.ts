@@ -2,6 +2,7 @@ import { RequestHandler } from 'express';
 import { Prisma, Light, Plant } from '@prisma/client';
 import prisma from '../prismainstance';
 import { LTRes } from '../helpers/ltres';
+import { prepareForSortName } from '../helpers/textparser';
 
 const create: RequestHandler = async (req, res, next) => {
   // public is not really optional, but it has a default value
@@ -90,7 +91,7 @@ const findPlants: RequestHandler = async (req, res, next) => {
 
     else {
       const limit: number | undefined = (req.query.limit && (+req.query.limit > 0)) ? +req.query.limit : undefined;
-      const query: any = {
+      const query: Prisma.PlantFindManyArgs = {
         take: limit,
         include: { 
           cover: {
@@ -106,6 +107,15 @@ const findPlants: RequestHandler = async (req, res, next) => {
         },
         where: {
           locationId: req.parser.id
+        }
+      }
+
+      if (req.query.filter) {
+        query.where = {
+          ...query.where,
+          sortName: {
+            contains: prepareForSortName(req.query.filter as string),
+          }
         }
       }
  
