@@ -90,9 +90,7 @@ const findPlants: RequestHandler = async (req, res, next) => {
     }
 
     else {
-      const limit: number | undefined = (req.query.limit && (+req.query.limit > 0)) ? +req.query.limit : undefined;
       const query: Prisma.PlantFindManyArgs = {
-        take: limit,
         include: { 
           cover: {
             select: { images: true }
@@ -117,6 +115,20 @@ const findPlants: RequestHandler = async (req, res, next) => {
             contains: prepareForSortName(req.query.filter as string),
           }
         }
+      }
+
+      if (req.query.limit && (+req.query.limit > 0)) {
+        query.take = +req.query.limit;
+      }
+      // else query.take = 10;
+    
+      if (req.query.sort) {
+        let order: 'asc' | 'desc' = 'asc';
+    
+        if (req.query.order && (req.query.order === 'desc')) order = 'desc';
+    
+        if (req.query.sort === 'name') query.orderBy = [{ sortName: order }];
+        else if (req.query.sort === 'date') query.orderBy = [{ createdAt: order }];
       }
  
       const plants = await prisma.plant.findMany(query);

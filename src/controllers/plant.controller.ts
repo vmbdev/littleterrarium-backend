@@ -137,6 +137,20 @@ const find : RequestHandler = async (req, res, next) => {
     }
   }
 
+  if (req.query.limit && (+req.query.limit > 0)) {
+    query.take = +req.query.limit;
+  }
+  // else query.take = 10;
+
+  if (req.query.sort) {
+    let order: 'asc' | 'desc' = 'asc';
+
+    if (req.query.order && (req.query.order === 'desc')) order = 'desc';
+
+    if (req.query.sort === 'name') query.orderBy = [{ sortName: order }];
+    else if (req.query.sort === 'date') query.orderBy = [{ createdAt: order }];
+  }
+
   query.include = {
     photos: photos ? photos : false,
     cover: photos ? true : false,
