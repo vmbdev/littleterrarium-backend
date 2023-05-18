@@ -142,6 +142,11 @@ const find : RequestHandler = async (req, res, next) => {
   }
   // else query.take = 10;
 
+  if (req.query.cursor && +req.query.cursor) {
+    query.cursor = { id: +req.query.cursor }
+    query.skip = 1;
+  }
+
   if (req.query.sort) {
     let order: 'asc' | 'desc' = 'asc';
 

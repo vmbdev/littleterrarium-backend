@@ -9,7 +9,7 @@
   },
   "private": true,
   "dependencies": {
-    "@prisma/client": "^4.6.1",
+    "@prisma/client": "^4.14.0",
     "@quixo3/prisma-session-store": "^3.1.10",
     "bcrypt": "^5.1.0",
     "cors": "^2.8.5",
@@ -19,8 +19,8 @@
     "express-async-errors": "^3.1.1",
     "express-session": "^1.17.3",
     "multer": "^1.4.5-lts.1",
-    "prisma": "^4.6.1",
-    "sharp": "^0.31.1"
+    "prisma": "^4.14.0",
+    "sharp": "^0.32.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.0",
@@ -29,7 +29,6 @@
     "@types/express-session": "^1.17.5",
     "@types/multer": "^1.4.7",
     "@types/node": "^18.11.9",
-    "@types/sharp": "^0.31.0",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^4.9.3"

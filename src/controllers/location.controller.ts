@@ -120,7 +120,12 @@ const findPlants: RequestHandler = async (req, res, next) => {
       if (req.query.limit && (+req.query.limit > 0)) {
         query.take = +req.query.limit;
       }
-      // else query.take = 10;
+      else query.take = 10;
+
+      if (req.query.cursor && +req.query.cursor) {
+        query.cursor = { id: +req.query.cursor }
+        query.skip = 1;
+      }
     
       if (req.query.sort) {
         let order: 'asc' | 'desc' = 'asc';

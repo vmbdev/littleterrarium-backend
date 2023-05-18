@@ -9,17 +9,17 @@ const router = Router();
 const uploader = multerUploader();
 
 router.post('/', uploader.single('avatar'), disk.image('avatar'), user.register);
+router.get('/', user.find);
 router.get('/id/:id?', parser.integers({ id: true }), user.findById);
 router.put('/', auth.self,  uploader.single('avatar'), disk.image('avatar'), user.modify);
 router.delete('/:id', auth.admin, user.remove);
 router.post('/signin', user.signin);
-// FIXME: make it post, to avoid prefetching errors
-router.get('/logout', user.logout);
+router.post('/logout', user.logout);
 router.post('/restore', user.restore);
 router.get('/validate/:key', user.verify);
 router.get('/password/requirements', user.passwordRequirements);
 router.post('/password/check', user.checkPassword)
-router.get('/username/requirements', user.usernameRequirements);
-router.get('/:username?', user.find);
+router.get('/usernamerequirements', user.usernameRequirements);
+router.get('/username/:username?', user.find);
 
 export default router;
