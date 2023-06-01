@@ -13,8 +13,8 @@ import notifications from './helpers/notifications';
 import errorHandling from './middlewares/errorhandling';
 import { generateAuth } from './middlewares/auth';
 import { generateParser } from './middlewares/parser';
-import { server as serverConfig } from '../littleterrarium.config';
 import { generateDisk } from './middlewares/disk';
+import { server as serverConfig } from '../littleterrarium.config';
 
 declare module 'express-session' {
   export interface SessionData {

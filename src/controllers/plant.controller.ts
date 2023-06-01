@@ -4,6 +4,7 @@ import { LTRes } from '../helpers/ltres';
 import { removePhoto } from '../helpers/photomanager';
 import { prepareForSortName } from '../helpers/textparser';
 import prisma from '../prismainstance';
+import { plants as plantsConfig } from '../../littleterrarium.config';
 import dayjs from 'dayjs';
 
 const nextDate = (last: Date, freq: number): Date => {
@@ -144,7 +145,7 @@ const find : RequestHandler = async (req, res, next) => {
   if (req.query.limit && (+req.query.limit > 0)) {
     query.take = +req.query.limit;
   }
-  // else query.take = 10;
+  else query.take = plantsConfig.number;
 
   if (req.query.cursor && +req.query.cursor) {
     query.cursor = { id: +req.query.cursor }

@@ -10,6 +10,10 @@ export const server = {
   }
 }
 
+export const plants = {
+  number: 20
+}
+
 export const files = {
   hash: 'sha1',
   folder: {

@@ -3,6 +3,7 @@ import { Prisma, Light, Plant } from '@prisma/client';
 import prisma from '../prismainstance';
 import { LTRes } from '../helpers/ltres';
 import { prepareForSortName } from '../helpers/textparser';
+import { plants as plantsConfig } from '../../littleterrarium.config';
 
 const create: RequestHandler = async (req, res, next) => {
   // public is not really optional, but it has a default value
@@ -42,6 +43,7 @@ const create: RequestHandler = async (req, res, next) => {
   }
 
   data.ownerId = req.auth.userId;
+
   try {
     const newLocation = await prisma.location.create({ data });
     res.send(newLocation);
@@ -120,7 +122,7 @@ const findPlants: RequestHandler = async (req, res, next) => {
       if (req.query.limit && (+req.query.limit > 0)) {
         query.take = +req.query.limit;
       }
-      else query.take = 10;
+      else query.take = plantsConfig.number;
 
       if (req.query.cursor && +req.query.cursor) {
         query.cursor = { id: +req.query.cursor }
