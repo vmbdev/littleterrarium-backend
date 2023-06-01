@@ -6,7 +6,9 @@ import { prepareForSortName } from '../helpers/textparser';
 import prisma from '../prismainstance';
 import dayjs from 'dayjs';
 
-
+const nextDate = (last: Date, freq: number): Date => {
+  return dayjs(last).add(freq, 'days').toDate();
+}
 
 /**
  * Express Middleware that creates a Plant object in the database.
@@ -67,8 +69,10 @@ const create : RequestHandler = async (req, res, next) => {
         }
         case 'customName': {
           // if customName is present, it has priority for sortName
-          data.sortName = prepareForSortName(req.body.customName);
-          data.customName = req.body.customName;
+          if (req.body.customName) {
+            data.sortName = prepareForSortName(req.body.customName);
+            data.customName = req.body.customName;
+          }
           break;
         }
         default:
@@ -80,10 +84,10 @@ const create : RequestHandler = async (req, res, next) => {
   // if water/fertiliser frequencies and last times are given,
   // calculate the next time it must be done
   if (req.parser.waterFreq && req.body.waterLast && dayjs(req.parser.waterLast).isValid() && +req.body.waterFreq) {
-    data.waterNext = dayjs(req.body.waterLast).add(req.parser.waterFreq, 'days').toDate();
+    data.waterNext = nextDate(req.body.waterLast, req.parser.waterFreq);
   }
   if (req.parser.fertFreq && req.body.fertLast && dayjs(req.parser.fertLast).isValid() && +req.body.fertFreq) {
-    data.fertNext = dayjs(req.body.fertLast).add(req.parser.fertFreq, 'days').toDate();
+    data.fertNext = nextDate(req.body.fertLast, req.parser.fertFreq);
   }
 
   data.ownerId = req.auth.userId;
@@ -223,9 +227,13 @@ const modify: RequestHandler = async (req, res, next) => {
     if (fields.includes(field)) {
       switch (field) {
         case 'condition': {
-          if (req.body.condition === null) data.condition = null;
-          else if (Condition.hasOwnProperty(req.body.condition)) {
-            data.condition = Condition[req.body.condition as Condition];
+          const condition = req.body.condition;
+
+          if (condition === null) {
+            data.condition = null;
+          }
+          else if (Condition.hasOwnProperty(condition)) {
+            data.condition = Condition[condition as Condition];
           }
           else return next(LTRes.msg('PLANT_CONDITION'));
 
@@ -233,11 +241,14 @@ const modify: RequestHandler = async (req, res, next) => {
         }
         case 'customName': {
           // otherwise it screws sorting
-          if (req.body.customName === '') data.customName = null;
+          if (!req.body.customName || (req.body.customName === '')) {
+            data.customName = null;
+          }
           else {
             data.customName = req.body.customName;
             data.sortName = prepareForSortName(req.body.customName);
           }
+
           break;
         }
         case 'locationId':
@@ -251,8 +262,14 @@ const modify: RequestHandler = async (req, res, next) => {
         }
         case 'waterLast':
         case 'fertLast': {
-          const date = new Date(req.body[field]);
-          data[field] = date;
+          const lastField = req.body[field];
+
+          if (lastField) {
+            const date = new Date(lastField);
+            data[field] = date;
+          }
+          else data[field] = null;
+
           break;
         }
         case 'removeSpecie': {
@@ -287,6 +304,23 @@ const modify: RequestHandler = async (req, res, next) => {
       data
     });
 
+    const plantUpdatedData: any = {};
+
+    /**
+     * We define here the internal property sortName.
+     * It's used exclusively internally to sort the plants.
+     * The requirement for this is because the plant can be named by the user
+     * (customName) or by the specie (specie.name), and we can't sort it by
+     * both columns simultaneously (just by one and then another).
+     */
+    if (!plant.customName) {
+      if (plant.specieId) {
+        const specie = await prisma.specie.findUnique({ where: { id: plant.specieId }});
+        plantUpdatedData.sortName = specie?.name;
+      }
+      else plantUpdatedData.sortName = null;
+    }
+
     /**
      * Check if the object has both frequency and last time for both water and
      * fertlizer. If so, updates the waterNext/waterFreq property.
@@ -296,23 +330,16 @@ const modify: RequestHandler = async (req, res, next) => {
      * In an environment with a specied database that supports both triggers
      * and date operations, it can be done with such trigger.
      * */
-    const plantUpdatedData: any = {};
-
-    if (!plant.customName) {
-      if (plant.specieId) {
-        const specie = await prisma.specie.findUnique({ where: { id: plant.specieId }});
-        plantUpdatedData.sortName = specie?.name;
-      }
-      else plantUpdatedData.sortName = null;
-    }
 
     if (plant.waterFreq && plant.waterLast) {
-      plantUpdatedData.waterNext = dayjs(plant.waterLast).add(plant.waterFreq, 'days').toDate();
+      plantUpdatedData.waterNext = nextDate(req.body.waterLast, req.parser.waterFreq);
     }
+    else if (!plant.waterLast) plantUpdatedData.waterNext = null;
 
     if (plant.fertFreq && plant.fertLast) {
-      plantUpdatedData.fertNext = dayjs(plant.fertLast).add(plant.fertFreq, 'days').toDate();
+      plantUpdatedData.fertNext = nextDate(req.body.fertLast, req.parser.fertFreq);
     }
+    else if (!plant.fertLast) plantUpdatedData.fertNext = null;
 
     if (Object.keys(plantUpdatedData).length > 0) {
       plant = await prisma.plant.update({
