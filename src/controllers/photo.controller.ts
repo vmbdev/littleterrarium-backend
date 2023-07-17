@@ -4,11 +4,21 @@ import { createPhoto, removePhoto } from '../helpers/photomanager';
 import { LTRes, NavigationData } from '../helpers/ltres';
 import { Photo, Prisma } from '@prisma/client';
 
+const PhotoColumnSelection: Prisma.PhotoSelect = {
+  id: true,
+  images: true,
+  description: true,
+  public: true,
+  ownerId: true,
+  plantId: true,
+  takenAt: true
+};
+
 const create: RequestHandler = async (req, res, next) => {
   if (!req.disk.files || (req.disk.files.length === 0)) return next(LTRes.msg('PHOTO_NOT_FOUND'));
 
   const data: any = {};
-  const optionalFields = ['description', 'public'];
+  const optionalFields = ['description', 'public', 'takenAt'];
 
   data.ownerId = req.auth.userId;
   data.plantId = req.parser.plantId;
@@ -18,6 +28,7 @@ const create: RequestHandler = async (req, res, next) => {
       if (field === 'public') {
         data.public = ((req.body.public === true) || (req.body.public === 'true'));
       }
+      else if (field === 'takenAt') data.takenAt = new Date(req.body.takenAt);
       else data[field] = req.body[field];
     }
   }
@@ -53,20 +64,12 @@ const find: RequestHandler = async (req, res, next) => {
 }
 
 const findOne: RequestHandler = async (req, res, next) => {
-  const query = {
+  const query: Prisma.PhotoFindUniqueArgs = {
     where: { id: req.parser.id },
-    select: {
-      id: true,
-      images: true,
-      description: true,
-      public: true,
-      ownerId: true,
-      plantId: true,
-      takenAt: true
-    }
+    select: PhotoColumnSelection
   };
 
-  let photo = await prisma.photo.findUnique(query);
+  const photo = await prisma.photo.findUnique(query);
 
   // if requesting user is not the owner, send only if it's public
   if (photo) {
@@ -145,8 +148,11 @@ const modify: RequestHandler = async (req, res, next) => {
         ownerId: req.auth.userId
       },
       data,
+      select: PhotoColumnSelection
     });
     res.send(photo);
+
+    console.log(photo);
   } catch (err) {
     next(LTRes.msg('PHOTO_NOT_FOUND').setCode(404));
   }

@@ -333,12 +333,12 @@ const modify: RequestHandler = async (req, res, next) => {
      * */
 
     if (plant.waterFreq && plant.waterLast) {
-      plantUpdatedData.waterNext = nextDate(req.body.waterLast, req.parser.waterFreq);
+      plantUpdatedData.waterNext = nextDate(plant.waterLast, plant.waterFreq);
     }
     else if (!plant.waterLast) plantUpdatedData.waterNext = null;
 
     if (plant.fertFreq && plant.fertLast) {
-      plantUpdatedData.fertNext = nextDate(req.body.fertLast, req.parser.fertFreq);
+      plantUpdatedData.fertNext = nextDate(plant.fertLast, plant.fertFreq);
     }
     else if (!plant.fertLast) plantUpdatedData.fertNext = null;
 
