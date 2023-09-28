@@ -38,6 +38,11 @@ router.put('/',
   }),
   plant.modify
 );
-router.delete('/:id', auth.self, auth.checkOwnership('plant'), parser.integers({ id: true }), plant.remove);
+router.delete('/:id',
+  auth.self,
+  auth.checkOwnership('plant'),
+  parser.integers({ id: true }),
+  plant.remove
+);
 
 export default router;

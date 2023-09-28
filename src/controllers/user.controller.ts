@@ -18,7 +18,8 @@ const removePassword = (user: User): User => {
 }
 
 const isUsernameValid = (username: string): boolean => {
-  const regexp = new RegExp(`^(?=.{${usernameConfig.minLength},${usernameConfig.maxLength}}$)[a-zA-Z0-9._-]+$`);
+  const rtest = `^(?=.{${usernameConfig.minLength},${usernameConfig.maxLength}}$)[a-zA-Z0-9._-]+$`;
+  const regexp = new RegExp(rtest);
 
   return regexp.test(username);
 }
@@ -61,7 +62,12 @@ const register: RequestHandler = async (req, res, next) => {
   }
 
   // if avatar
-  if (req.disk.file) data.avatar = { path: req.disk.file.path, webp: req.disk.file.webp ? req.disk.file.webp : undefined };
+  if (req.disk.file) {
+    data.avatar = {
+      path: req.disk.file.path,
+      webp: req.disk.file.webp ? req.disk.file.webp : undefined
+    };
+  }
 
   try {
     const user = await prisma.user.create({ data });
@@ -159,7 +165,10 @@ const modify: RequestHandler = async (req, res, next) => {
 
   for (const requestedField of Object.keys(req.body)) {
     if (fields.includes(requestedField)) {
-      if (((requestedField === 'username') && !isUsernameValid(req.body.username)) || ((requestedField === 'email') && !isEmail(req.body.email))) {
+      if (
+        ((requestedField === 'username') && !isUsernameValid(req.body.username))
+        || ((requestedField === 'email') && !isEmail(req.body.email))
+      ) {
         return next(LTRes.msg('USER_FIELD_INVALID').errorField(requestedField));
       }
 
@@ -171,7 +180,9 @@ const modify: RequestHandler = async (req, res, next) => {
       }
 
       else if (requestedField === 'role') {
-        if ((req.session.role === Role.ADMIN) && Role.hasOwnProperty(req.body.role)) data.role = req.body.role;
+        if ((req.session.role === Role.ADMIN) && Role.hasOwnProperty(req.body.role)) {
+          data.role = req.body.role;
+        }
         else return next(LTRes.createCode(403));
       }
 
@@ -185,7 +196,12 @@ const modify: RequestHandler = async (req, res, next) => {
 
   // picture
   if (req.body.removeAvatar) data.avatar = Prisma.JsonNull;
-  else if (req.disk.file) data.avatar = { path: req.disk.file.path, webp: req.disk.file.webp ? req.disk.file.webp : undefined };
+  else if (req.disk.file) {
+    data.avatar = {
+      path: req.disk.file.path,
+      webp: req.disk.file.webp ? req.disk.file.webp : undefined
+    };
+  }
 
   try {
     const user = await prisma.user.update({ where: { id: req.auth.userId }, data })

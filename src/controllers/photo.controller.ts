@@ -15,7 +15,9 @@ const PhotoColumnSelection: Prisma.PhotoSelect = {
 };
 
 const create: RequestHandler = async (req, res, next) => {
-  if (!req.disk.files || (req.disk.files.length === 0)) return next(LTRes.msg('PHOTO_NOT_FOUND'));
+  if (!req.disk.files || (req.disk.files.length === 0)) {
+    return next(LTRes.msg('PHOTO_NOT_FOUND'));
+  }
 
   const data: any = {};
   const optionalFields = ['description', 'public', 'takenAt'];
@@ -38,29 +40,6 @@ const create: RequestHandler = async (req, res, next) => {
   await prisma.$transaction(ops);
 
   res.send(LTRes.createCode(200).plantId(data.plantId));
-}
-
-const find: RequestHandler = async (req, res, next) => {
-  // const query: any = {
-  //   select: { id: true, images: true, description: true, public: true, takenAt: true }
-  // };
-
-  // // if asking for a different user, return only the ones that are public
-  // if (req.parser.userId && (req.parser.userId !== req.auth.userId)) {
-  //   query.where = {
-  //     ownerId: req.parser.userId,
-  //     public: true
-  //   }
-  // }
-  // else query.where = { ownerId: req.auth.userId };
-
-  // if (req.parser.plantId) query.where.plantId = req.parser.plantId;
-
-  // const photos = await prisma.photo.findMany(query);
-
-  // if (photos.length > 0) res.send(photos);
-  // else next(LTRes.msg('PHOTO_NOT_FOUND').setCode(404));
-  return next(LTRes.createCode(404));
 }
 
 const findOne: RequestHandler = async (req, res, next) => {
@@ -170,7 +149,6 @@ const remove: RequestHandler = async (req, res, next) => {
 
 export default {
   create,
-  find,
   findOne,
   getNavigation,
   modify,

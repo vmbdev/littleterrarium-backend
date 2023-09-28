@@ -13,8 +13,8 @@ const nextDate = (last: Date, freq: number): Date => {
 
 /**
  * Express Middleware that creates a Plant object in the database.
- * Even though we receive a Plant-like object, we specify which properties are allowed to be stored
- * and check each of them for security sake.
+ * Even though we receive a Plant-like object, we specify which properties
+ * are allowed to be stored and check each of them for security sake.
  */
 const create : RequestHandler = async (req, res, next) => {
   const requiredFields = ['locationId'];
@@ -35,8 +35,6 @@ const create : RequestHandler = async (req, res, next) => {
   ];
   const data: any = {};
 
-  // if (!req.body.specieId && !req.body.customName) return next({ error: 'PLANT_SPECIE_OR_NAME' });
-
   for (const field of requiredFields) {
     if (!req.body[field]) return next(LTRes.msg('MISSING_FIELD').errorField(field));
     else if (field === 'locationId') data.locationId = req.parser.locationId;
@@ -47,8 +45,11 @@ const create : RequestHandler = async (req, res, next) => {
     if (req.body[field]) {
       switch (field) {
         case 'condition': {
-          if (!Condition.hasOwnProperty(req.body.condition)) return next(LTRes.msg('PLANT_CONDITION'));
+          if (!Condition.hasOwnProperty(req.body.condition)) {
+            return next(LTRes.msg('PLANT_CONDITION'));
+          }
           else data.condition = Condition[req.body.condition as Condition];
+
           break;
         }
         case 'specieId':
@@ -84,10 +85,20 @@ const create : RequestHandler = async (req, res, next) => {
   
   // if water/fertiliser frequencies and last times are given,
   // calculate the next time it must be done
-  if (req.parser.waterFreq && req.body.waterLast && dayjs(req.parser.waterLast).isValid() && +req.body.waterFreq) {
+  if (
+    req.parser.waterFreq
+    && req.body.waterLast
+    && dayjs(req.parser.waterLast).isValid()
+    && +req.body.waterFreq
+  ) {
     data.waterNext = nextDate(req.body.waterLast, req.parser.waterFreq);
   }
-  if (req.parser.fertFreq && req.body.fertLast && dayjs(req.parser.fertLast).isValid() && +req.body.fertFreq) {
+  if (
+    req.parser.fertFreq
+    && req.body.fertLast
+    && dayjs(req.parser.fertLast).isValid()
+    && +req.body.fertFreq
+  ) {
     data.fertNext = nextDate(req.body.fertLast, req.parser.fertFreq);
   }
 
@@ -95,7 +106,10 @@ const create : RequestHandler = async (req, res, next) => {
 
   try {
     if (!data.customName && data.specieId) {
-      const specie = await prisma.specie.findUnique({ where: { id: data.specieId }});
+      const specie = await prisma.specie.findUnique({
+        where: { id: data.specieId }
+      });
+
       data.sortName = specie?.name;
     }
 
@@ -108,8 +122,10 @@ const create : RequestHandler = async (req, res, next) => {
 }
 
 /**
- * Express Middleware to request a list of Plant objects optionally filtered by locationId.
- * The object contains one Photo object as well as the Specie object related to it.
+ * Express Middleware to request a list of Plant objects optionally
+ * filtered by locationId.
+ * The object contains one Photo object as well as the Specie object related
+ * to it.
  */
 const find : RequestHandler = async (req, res, next) => {
   const query: Prisma.PlantFindManyArgs = {};
@@ -179,20 +195,13 @@ const find : RequestHandler = async (req, res, next) => {
  * as its Specie object.
  */
 const findOne: RequestHandler = async (req, res, next) => {
-  const query: any = {
-    where: { id: req.parser.id },
-    include: {
-      // photos: true, //(req.query.photos === 'true'),
-      cover: (req.query.cover === 'true'),
-      specie: true
-    }
-  };
+  const query: Prisma.PlantFindUniqueArgs = { where: { id: req.parser.id } };
+  query.include = {
+    // photos: true, //(req.query.photos === 'true'),
+    cover: (req.query.cover === 'true'),
+    specie: true
+  }
 
-  // if (req.query.photos === 'true') {
-  //   query.include.photos = {
-  //     select: { id: true, images: true, public: true, takenAt: true }
-  //   }
-  // }
   // if user requests cover, we send both the cover relationship and one
   // photo, in case the cover doesn't exists
   if (req.query.cover === 'true') {
@@ -206,7 +215,9 @@ const findOne: RequestHandler = async (req, res, next) => {
 
   // if requesting user is not the owner, send only if it's public
   if (plant) {
-    if (plant.public || (plant.ownerId === req.auth.userId)) res.send(plant);
+    if (plant.public || (plant.ownerId === req.auth.userId)) {
+      res.send(plant);
+    }
     else return next(LTRes.createCode(403));
   }
   else next(LTRes.msg('PLANT_NOT_FOUND').setCode(404));
@@ -218,9 +229,23 @@ const findOne: RequestHandler = async (req, res, next) => {
  */
 const modify: RequestHandler = async (req, res, next) => {
   const fields = [
-    'locationId', 'specieId', 'coverId', 'customName', 'description', 'condition',
-    'waterFreq', 'waterLast', 'fertFreq', 'fertLast', 'fertType', 'potType',
-    'potSize', 'soil', 'public', 'removeSpecie', 'removeCover'
+    'locationId',
+    'specieId',
+    'coverId',
+    'customName',
+    'description',
+    'condition',
+    'waterFreq',
+    'waterLast',
+    'fertFreq',
+    'fertLast',
+    'fertType',
+    'potType',
+    'potSize',
+    'soil',
+    'public',
+    'removeSpecie',
+    'removeCover'
   ];
   const data: any = {};
 
@@ -316,7 +341,10 @@ const modify: RequestHandler = async (req, res, next) => {
      */
     if (!plant.customName) {
       if (plant.specieId) {
-        const specie = await prisma.specie.findUnique({ where: { id: plant.specieId }});
+        const specie = await prisma.specie.findUnique({
+          where: { id: plant.specieId }
+        });
+
         plantUpdatedData.sortName = specie?.name;
       }
       else plantUpdatedData.sortName = null;
@@ -409,7 +437,9 @@ const getCover: RequestHandler = async (req, res, next) => {
     });
 
     if (plant) {
-      if ((plant.ownerId === req.auth.userId) || plant.public) res.send({ coverId: plant.coverId });
+      if ((plant.ownerId === req.auth.userId) || plant.public) {
+        res.send({ coverId: plant.coverId });
+      }
       else return next(LTRes.createCode(403));
     }
     else next(LTRes.msg('PLANT_NOT_FOUND').setCode(404));

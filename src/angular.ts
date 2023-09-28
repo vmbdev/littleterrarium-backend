@@ -4,10 +4,14 @@ import { stat, readdir } from 'node:fs/promises';
 import express, { Express } from 'express';
 import { LTRes } from './helpers/ltres';
 
+type LanguageSet = {
+  locales: string[],
+  default?: string
+}
 
 export const enableAngularRouting = async (app: Express, defaultLanguage?: string) => {
   const distPath = path.join(__dirname, '../dist/littleterrarium');
-  const languagesToSend: any = { locales: [] };
+  const languagesToSend: LanguageSet = { locales: [] };
   let distStat;
 
   app.get('/api/angular/locales', (req, res, next) => {
@@ -36,7 +40,13 @@ export const enableAngularRouting = async (app: Express, defaultLanguage?: strin
     else {
       for (const language of languageList) {
         if (language !== defaultLanguage) {
-          const res = await setAngularRoutes(app, `/${language}`, `/${language}/*`, distPath, language);
+          const res = await setAngularRoutes(
+            app,
+            `/${language}`,
+            `/${language}/*`,
+            distPath,
+            language
+          );
 
           if (res) languagesToSend.locales.unshift(language)
         }

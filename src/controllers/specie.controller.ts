@@ -8,7 +8,9 @@ const create: RequestHandler =  async (req, res, next) => {
   const data: any = {};
 
   for (const field of requiredFields) {
-    if (!req.body[field]) return next(LTRes.msg('MISSING_FIELD').errorField(field));
+    if (!req.body[field]) {
+      return next(LTRes.msg('MISSING_FIELD').errorField(field));
+    }
     else data[field] = req.body[field];
   }
 
@@ -55,7 +57,9 @@ const find: RequestHandler = async (req, res, next) => {
 }
 
 const findOne: RequestHandler = async (req, res, next) => {
-  const specie = await prisma.specie.findUnique({ where: { id: req.parser.id } });
+  const specie = await prisma.specie.findUnique({
+    where: { id: req.parser.id }
+  });
 
   if (specie) res.send(specie);
   else next(LTRes.msg('SPECIE_NOT_VALID'));

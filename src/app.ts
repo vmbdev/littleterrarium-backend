@@ -32,7 +32,9 @@ const app: Express = express();
 // enable Android & iOS Capacitor builds if user CORS is disabled
 let allowedOrigins;
 
-if (serverConfig.useCors && serverConfig.corsOrigin) allowedOrigins = serverConfig.corsOrigin;
+if (serverConfig.useCors && serverConfig.corsOrigin) {
+  allowedOrigins = serverConfig.corsOrigin;
+}
 else allowedOrigins = [
   'capacitor://localhost',
   'ionic://localhost',

@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import { password as passwordConfig } from '../../littleterrarium.config';
 
 export type PasswordCheckResult = {
-  valid: boolean;
+  valid: boolean,
   comp: {
     minLength?: boolean,
     hasUppercase?: boolean,
@@ -15,7 +15,7 @@ const hash = (password: string) => {
   return bcrypt.hash(password, 10);
 }
 
-const compare = (password: string , hash: string) => {
+const compare = (password: string, hash: string) => {
   return bcrypt.compare(password, hash);
 }
 
@@ -23,6 +23,7 @@ const check = (password: string): PasswordCheckResult => {
   const result: PasswordCheckResult = { valid: true, comp: {} };
 
   result.comp.minLength = (password.length >= passwordConfig.minLength);
+  result.valid &&= result.comp.minLength;
 
   if (passwordConfig.requireUppercase) {
     result.comp.hasUppercase = (/.*([A-Z]).*/).test(password);
@@ -38,8 +39,6 @@ const check = (password: string): PasswordCheckResult => {
     result.comp.hasNonAlphanumeric = (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/).test(password);
     result.valid &&= result.comp.hasNonAlphanumeric;
   }
-
-  result.valid &&= result.comp.minLength;
 
   return result;
 }

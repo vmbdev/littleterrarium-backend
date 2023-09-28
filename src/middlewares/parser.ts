@@ -35,9 +35,13 @@ export const integers = (list: ParserOptions) => {
       if (place) {
         // avoid mutating params or body
         req.parser[field] = Number.parseInt(place[field]);
-        if (!req.parser[field]) return next(LTRes.msg('INVALID_VALUE').errorField(field));
+        if (!req.parser[field]) {
+          return next(LTRes.msg('INVALID_VALUE').errorField(field));
+        }
       }
-      else if (list[field]) return next(LTRes.msg('MISSING_VALUE').errorField(field));
+      else if (list[field]) {
+        return next(LTRes.msg('MISSING_VALUE').errorField(field));
+      }
     }
 
     next();

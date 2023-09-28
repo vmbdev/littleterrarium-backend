@@ -8,10 +8,19 @@ import disk from '../middlewares/disk';
 const router = Router();
 const uploader = multerUploader();
 
-router.post('/', uploader.single('avatar'), disk.image('avatar'), user.register);
+router.post('/',
+  uploader.single('avatar'),
+  disk.image('avatar'),
+  user.register
+);
 router.get('/', user.find);
 router.get('/id/:id?', parser.integers({ id: true }), user.findById);
-router.put('/', auth.self,  uploader.single('avatar'), disk.image('avatar'), user.modify);
+router.put('/',
+  auth.self,
+  uploader.single('avatar'),
+  disk.image('avatar'),
+  user.modify
+);
 router.delete('/:id', auth.admin, user.remove);
 router.post('/signin', user.signin);
 router.post('/logout', user.logout);

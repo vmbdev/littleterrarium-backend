@@ -19,15 +19,17 @@ declare global {
 export const generateAuth: RequestHandler = (req, res, next) => {
   req.auth = {};
   req.auth.userId = (
-    req.body.userId ? +req.body.userId
-    : req.params.userId ? +req.params.userId
-    : req.session.userId
+    req.body.userId ?
+    +req.body.userId :
+    (req.params.userId ?
+      +req.params.userId :
+      req.session.userId)
   );
 
   next();
 }
 
-// only allow if it's signed in, and if the data modifying is his/her or if he/she's an admin
+// only allow if it's signed in, and if the data modifying is owned or if user's an admin
 export const self: RequestHandler = (req, res, next) => {
   if (!req.session.signedIn) return next(LTRes.createCode(401));
   else if ((req.auth.userId !== req.session.userId) && (req.session.role !== Role.ADMIN)) {
@@ -38,7 +40,9 @@ export const self: RequestHandler = (req, res, next) => {
 }
 
 export const admin: RequestHandler = (req, res, next) => {
-  if (!req.session.signedIn || (req.session.role !== Role.ADMIN)) return next(LTRes.createCode(403));
+  if (!req.session.signedIn || (req.session.role !== Role.ADMIN)) {
+    return next(LTRes.createCode(403));
+  }
 
   next();
 }
@@ -97,7 +101,9 @@ export const checkRelationship = (model: string, idField: string) => {
     let id;
     const prismaDelegate = getModelDelegate(model);
 
-    if ((req.method === 'PUT') || (req.method === 'POST') && req.body[idField]) id = +req.body[idField];
+    if ((req.method === 'PUT') || (req.method === 'POST') && req.body[idField]) {
+      id = +req.body[idField];
+    }
     else if (req.params[idField]) id = +req.params[idField];
 
     if (prismaDelegate && id) {
@@ -127,7 +133,9 @@ export const checkOwnership = (model: string) => {
     let id;
     const prismaDelegate = getModelDelegate(model);
 
-    if ((req.method === 'PUT') || (req.method === 'POST') && req.body.id) id = +req.body.id;
+    if ((req.method === 'PUT') || (req.method === 'POST') && req.body.id) {
+      id = +req.body.id;
+    }
     else id = +req.params.id;
 
     if (prismaDelegate && id) {

@@ -18,7 +18,12 @@ const create: RequestHandler = async (req, res, next) => {
       return next(LTRes.msg('MISSING_FIELD').errorField(field));
     }
     else if ((field === 'light') && !Light.hasOwnProperty(req.body[field])) {
-      return next(LTRes.msg('INCORRECT_FIELD').errorField(field).errorValues(Object.values(Light)));
+      return next(
+        LTRes
+          .msg('INCORRECT_FIELD')
+          .errorField(field)
+          .errorValues(Object.values(Light))
+      );
     }
 
     data[field] = req.body[field];
@@ -53,7 +58,7 @@ const create: RequestHandler = async (req, res, next) => {
 }
 
 const find: RequestHandler = async (req, res, next) => {
-  const query: any = {
+  const query: Prisma.LocationFindManyArgs = {
     orderBy: { createdAt: 'asc' },
   };
 
@@ -179,7 +184,8 @@ const findOne: RequestHandler = async (req, res, next) => {
       const locationWithPublicPlants = location as any;
 
       if (locationWithPublicPlants.plants) {
-        locationWithPublicPlants.plants = locationWithPublicPlants.plants.filter((plant: Plant) => plant.public);
+        locationWithPublicPlants.plants =
+          locationWithPublicPlants.plants.filter((plant: Plant) => plant.public);
       }
 
       res.send(locationWithPublicPlants);
