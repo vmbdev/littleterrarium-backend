@@ -10,7 +10,8 @@ type LanguageSet = {
 }
 
 export const enableAngularRouting = async (app: Express, defaultLanguage?: string) => {
-  const distPath = path.join(__dirname, '../dist/littleterrarium');
+  // FIXME: allow a configurable/array of options
+  const distPath = path.join(__dirname, '../dist/littleterrarium/browser');
   const languagesToSend: LanguageSet = { locales: [] };
   let distStat;
 
@@ -76,7 +77,7 @@ const setAngularRoutes = async (app: Express, dir: string, url: string, distPath
 
     return true;
   } catch {
-    console.log(`[Angular] Can't enable ${ language ? `${language} language` : ''} routing: missing index.html`);
+    console.log(`[Angular] Can't enable ${language ? `${language} language` : ''} routing: missing index.html`);
 
     return false;
   }

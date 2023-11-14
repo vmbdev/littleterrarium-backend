@@ -6,16 +6,21 @@ import session from 'express-session';
 import { PrismaSessionStore } from '@quixo3/prisma-session-store/dist/index';
 import { Role } from '@prisma/client';
 
+import prisma from './prismainstance';
+
 import apiRoutes from './routes/api.routes';
 import { enableAngularRouting } from './angular';
-import prisma from './prismainstance';
-import notifications from './helpers/notifications';
+// import notifications from './helpers/notifications';
+
 import errorHandling from './middlewares/errorhandling';
 import { generateAuth } from './middlewares/auth';
 import { generateParser } from './middlewares/parser';
 import { generateDisk } from './middlewares/disk';
 import { server as serverConfig } from '../littleterrarium.config';
 
+/**
+ * Extend SessionData from express-session to include user info
+ */
 declare module 'express-session' {
   export interface SessionData {
     signedIn: boolean,
@@ -23,6 +28,8 @@ declare module 'express-session' {
     userId: number,
   }
 }
+
+// If necessary, create /public and /temp directories
 mkdirSync('public', { recursive: true });
 mkdirSync('temp', { recursive: true });
 
@@ -71,7 +78,7 @@ app.use(
     )
   })
 );
-app.use('/*', generateAuth, generateParser, generateDisk);;
+app.use('/*', generateAuth, generateParser, generateDisk);
 app.use('/api', apiRoutes);
 app.use('/public', express.static('public'));
 enableAngularRouting(app, serverConfig.angular.defaultLang);
