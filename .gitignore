@@ -8,6 +8,5 @@ utils/res
 dist
 .env
 littleterrarium.config.ts
-CHANGELOG.md
 TODO.md
 BACKEND.md

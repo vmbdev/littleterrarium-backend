@@ -1,8 +1,12 @@
+import crypto from 'node:crypto';
 import { RequestHandler } from 'express';
+import dayjs from 'dayjs';
+
 import { User, Role, Prisma } from '@prisma/client';
 import prisma from '../prismainstance';
 import Password from '../helpers/password';
 import { LTRes } from '../helpers/ltres';
+import mailer from '../helpers/mailer';
 import { username as usernameConfig } from '../../littleterrarium.config'
 
 const isEmail = (email: string): boolean => {
@@ -18,7 +22,9 @@ const removePassword = (user: User): User => {
 }
 
 const isUsernameValid = (username: string): boolean => {
-  const rtest = `^(?=.{${usernameConfig.minLength},${usernameConfig.maxLength}}$)[a-zA-Z0-9._-]+$`;
+  const min = usernameConfig.minLength;
+  const max = usernameConfig.maxLength;
+  const rtest = `^(?=.{${min},${max}}$)[a-zA-Z0-9._-]+$`;
   const regexp = new RegExp(rtest);
 
   return regexp.test(username);
@@ -26,24 +32,37 @@ const isUsernameValid = (username: string): boolean => {
 
 const register: RequestHandler = async (req, res, next) => {
   const requiredFields = ['username', 'password', 'email'];
-  const optionalFields = ['firstname', 'lastname', 'public', 'bio', 'preferences'];
+  const optionalFields = [
+    'firstname',
+    'lastname',
+    'public',
+    'bio',
+    'preferences'
+  ];
   const data: any = {};
 
   for (const field of requiredFields) {
     // if a mandatory field isn't received, return with error
-    if (!req.body[field]) return next(LTRes.msg('MISSING_FIELD').errorField(field));
+    if (!req.body[field]) {
+      return next(LTRes.msg('MISSING_FIELD').errorField(field));
+    }
 
     if (field === 'password') {
       const passwdCheck = Password.check(req.body.password);
 
-      if (passwdCheck.valid) data.password = await Password.hash(req.body.password);
+      if (passwdCheck.valid) {
+        data.password = await Password.hash(req.body.password);
+      }
       else {
         return next(LTRes.msg('USER_PASSWD_INVALID').errorComp(passwdCheck.comp));
       }
     }
 
     else {
-      if (((field === 'username') && !isUsernameValid(req.body.username)) || ((field === 'email') && !isEmail(req.body.email))) {
+      if (
+        (field === 'username' && !isUsernameValid(req.body.username))
+        || (field === 'email' && !isEmail(req.body.email))
+      ) {
         return next(LTRes.msg('USER_FIELD_INVALID').errorField(field));
       }
 
@@ -55,7 +74,7 @@ const register: RequestHandler = async (req, res, next) => {
   for (const field of optionalFields) {
     if (req.body[field]) {
       if (field === 'public') {
-        data.public = ((req.body.public === true) || (req.body.public === 'true'));
+        data.public = (req.body.public === true || req.body.public === 'true');
       }
       else data[field] = req.body[field];
     }
@@ -118,7 +137,7 @@ const find: RequestHandler = async (req, res, next) => {
   });
 
   if (user) {
-    if ((!req.params.username) || user.public || (req.session.role === Role.ADMIN)) {
+    if (!req.params.username || user.public || req.session.role === Role.ADMIN) {
       res.send(user);
     }
     else next(LTRes.msg('USER_PRIVATE').setCode(403));
@@ -148,7 +167,11 @@ const findById: RequestHandler = async (req, res, next) => {
   });
 
   if (user) {
-    if (user.public || (req.auth.userId === req.parser.id) || (req.session.role === Role.ADMIN)) {
+    if (
+      user.public
+      || req.auth.userId === req.parser.id
+      || req.session.role === Role.ADMIN
+    ) {
       res.send(user);
     }
     else next(LTRes.msg('USER_PRIVATE').setCode(403));
@@ -158,16 +181,24 @@ const findById: RequestHandler = async (req, res, next) => {
 
 const modify: RequestHandler = async (req, res, next) => {
   const fields = [
-    'username', 'password', 'email', 'firstname', 'lastname', 'role', 'public',
-    'bio', 'avatar', 'preferences'
+    'username',
+    'password',
+    'email',
+    'firstname',
+    'lastname',
+    'role',
+    'public',
+    'bio',
+    'avatar',
+    'preferences'
   ];
   const data: any = {};
 
   for (const requestedField of Object.keys(req.body)) {
     if (fields.includes(requestedField)) {
       if (
-        ((requestedField === 'username') && !isUsernameValid(req.body.username))
-        || ((requestedField === 'email') && !isEmail(req.body.email))
+        (requestedField === 'username' && !isUsernameValid(req.body.username))
+        || (requestedField === 'email' && !isEmail(req.body.email))
       ) {
         return next(LTRes.msg('USER_FIELD_INVALID').errorField(requestedField));
       }
@@ -175,19 +206,26 @@ const modify: RequestHandler = async (req, res, next) => {
       else if (requestedField === 'password') {
         const passwdCheck = Password.check(req.body.password);
 
-        if (passwdCheck.valid) data.password = await Password.hash(req.body.password);
-        else return next(LTRes.msg('USER_PASSWD_INVALID').errorComp(passwdCheck.comp));
+        if (passwdCheck.valid) {
+          data.password = await Password.hash(req.body.password);
+        }
+        else {
+          return next(LTRes.msg('USER_PASSWD_INVALID').errorComp(passwdCheck.comp));
+        }
       }
 
       else if (requestedField === 'role') {
-        if ((req.session.role === Role.ADMIN) && Role.hasOwnProperty(req.body.role)) {
+        if (
+          req.session.role === Role.ADMIN
+          && Role.hasOwnProperty(req.body.role)
+        ) {
           data.role = req.body.role;
         }
         else return next(LTRes.createCode(403));
       }
 
       else if (requestedField === 'public') {
-        data.public = ((req.body.public === true) || (req.body.public === 'true'));
+        data.public = (req.body.public === true || req.body.public === 'true');
       }
 
       else data[requestedField] = req.body[requestedField];
@@ -204,7 +242,10 @@ const modify: RequestHandler = async (req, res, next) => {
   }
 
   try {
-    const user = await prisma.user.update({ where: { id: req.auth.userId }, data })
+    const user = await prisma.user.update({
+      where: { id: req.auth.userId },
+      data
+    });
 
     res.send(removePassword(user));
   } catch (err: any) {
@@ -252,18 +293,118 @@ const logout: RequestHandler = (req, res, next) => {
   });
 }
 
-//TODO: send verification email and verify
+const forgottenPassword: RequestHandler = async (req, res, next) => {
+  const userRef = req.body.userRef;
+
+  if (!userRef) return next(LTRes.createCode(400));
+
+  let user: User | null;
+
+  if (isEmail(userRef)) {
+    user = await prisma.user.findUnique({ where: { email: userRef }});
+  }
+  else {
+    user = await prisma.user.findUnique({ where: { username: userRef }});
+  }
+
+  if (!user) {
+    return next(LTRes.msg('USER_DATA_INCORRECT').setCode(401));
+  }
+
+  const token = crypto.randomBytes(32).toString('hex');
+  const tomorrow = dayjs().add(1, 'day').toDate();
+
+  const tokenRes = await prisma.userRecoveryToken.upsert({
+    where: {
+      userId: user.id
+    },
+    update: {
+      token,
+      expiry: tomorrow
+    },
+    create: {
+      userId: user.id,
+      token,
+      expiry: tomorrow
+    }
+  });
+
+  if (tokenRes) {
+    mailer.sendUserRecovery(user.email, tokenRes.token, tokenRes.userId);
+    res.send(LTRes.createCode(204));
+  }
+  else next(LTRes.createCode(500));
+}
+
 const restore: RequestHandler = async (req, res, next) => {
+  const { token, password }: { token: string, password: string } = req.body;
+  const userId: number = +req.body.userId;
+  
+  if (!token || !password || !userId) return next(LTRes.createCode(400));
+  
+  const savedToken = await prisma.userRecoveryToken.findUnique({
+    where: { token, userId }
+  });
+
+  if (savedToken) {
+    if (dayjs(savedToken.expiry).isBefore(dayjs())) {
+      return next(LTRes.msg('USER_TOKEN_EXPIRED').setCode(400));
+    }
+
+    const pcheck = Password.check(password);
+
+    if (pcheck.valid) {
+      try {
+        await prisma.user.update({
+          where: { id: userId },
+          data: {
+            password: await Password.hash(password)
+          }
+        });
+
+        await prisma.userRecoveryToken.delete({ where: { userId }});
+
+        res.send(LTRes.createCode(204));
+      } catch (err) {
+        return next(LTRes.createCode(500));
+      }
+    }
+    else return next(LTRes.msg('USER_PASSWD_INVALID').errorComp(pcheck.comp));
+  }
+  else return next(LTRes.msg('USER_TOKEN_INVALID').setCode(400));
+}
+
+const verifyToken: RequestHandler = async (req, res, next) => {
+  const { token } = req.body;
+  const userId = +req.body.userId;
+
+  if (!token || !userId) return next(LTRes.createCode(400));
+
+  const savedToken = await prisma.userRecoveryToken.findUnique({
+    where: { token, userId }
+  });
+
+  if (savedToken) {
+    if (dayjs(savedToken.expiry).isBefore(dayjs())) {
+      return next(LTRes.msg('USER_TOKEN_EXPIRED').setCode(400));
+    }
+    else res.send(LTRes.createCode(204))
+  }
+  else return next(LTRes.msg('USER_TOKEN_INVALID').setCode(400));
 }
 
 const verify: RequestHandler = async (req, res, next) => {
 }
 
 const checkPassword: RequestHandler = (req, res, next) => {
-  const pcheck = Password.check(req.body.password);
+  const { password } = req.body;
 
-  if (pcheck.valid) res.send(LTRes.msg('PASSWD_VALID'));
-  else next(LTRes.msg('USER_PASSWD_INVALID').errorComp(pcheck.comp));
+  if (password) {
+    const pcheck = Password.check(req.body.password);
+
+    if (pcheck.valid) res.send(LTRes.msg('PASSWD_VALID'));
+    else next(LTRes.msg('USER_PASSWD_INVALID').errorComp(pcheck.comp));
+  } else return next(LTRes.createCode(400));
 }
 
 const passwordRequirements: RequestHandler = (req, res, next) => {
@@ -282,7 +423,9 @@ export default {
   remove,
   signin,
   logout,
+  forgottenPassword,
   restore,
+  verifyToken,
   verify,
   checkPassword,
   passwordRequirements,

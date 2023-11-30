@@ -131,7 +131,6 @@ const modify: RequestHandler = async (req, res, next) => {
     });
     res.send(photo);
 
-    console.log(photo);
   } catch (err) {
     next(LTRes.msg('PHOTO_NOT_FOUND').setCode(404));
   }

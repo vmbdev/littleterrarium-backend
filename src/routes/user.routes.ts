@@ -12,7 +12,9 @@ router.post('/',
   uploader.single('avatar'),
   disk.image('avatar'),
   user.register
-);
+  );
+  router.post('/validate/:key', user.verify);
+
 router.get('/', user.find);
 router.get('/id/:id?', parser.integers({ id: true }), user.findById);
 router.put('/',
@@ -24,8 +26,11 @@ router.put('/',
 router.delete('/:id', auth.admin, user.remove);
 router.post('/signin', user.signin);
 router.post('/logout', user.logout);
+
+router.post('/forgotten', user.forgottenPassword);
 router.post('/restore', user.restore);
-router.get('/validate/:key', user.verify);
+router.post('/verifytoken', user.verifyToken)
+
 router.get('/password/requirements', user.passwordRequirements);
 router.post('/password/check', user.checkPassword)
 router.get('/usernamerequirements', user.usernameRequirements);

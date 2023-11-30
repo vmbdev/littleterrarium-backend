@@ -36,3 +36,13 @@ export const password = {
   requireNumber: true,
   requireNonAlphanumeric: true
 }
+
+export const mailer = {
+  pool: true,
+  host: '',
+  port: 587,
+  auth: {
+    user: '',
+    pass: ''
+  }
+}

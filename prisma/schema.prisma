@@ -22,10 +22,20 @@ model User {
   plants        Plant[]
   photos        Photo[]
   notifications Notification[]
+  recoveryToken UserRecoveryToken?
   public        Boolean    @default(false)
   status        UserStatus @default(UNVERIFIED)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
+}
+
+model UserRecoveryToken {
+  id            Int        @id @default(autoincrement())
+  token         String     @db.Char(64)
+  expiry        DateTime
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        Int        @unique
+  createdAt     DateTime   @default(now())
 }
 
 enum Role {
@@ -40,23 +50,23 @@ enum UserStatus {
 }
 
 model Session {
-  id          String   @id
-  sid         String   @unique
+  id          String       @id
+  sid         String       @unique
   data        String
   expiresAt   DateTime
 }
 
 model Location {
-  id          Int        @id @default(autoincrement())
-  name        String     @db.VarChar(60)
+  id          Int          @id @default(autoincrement())
+  name        String       @db.VarChar(60)
   pictures    Json?
   light       Light
-  public      Boolean    @default(false)
+  public      Boolean      @default(false)
   plants      Plant[]
-  owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner       User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId     Int
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 enum Light {
@@ -146,7 +156,7 @@ model Specie {
 }
 
 model Notification {
-  id          Int       @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   type        NotificationType
   read        DateTime?
   content     Json
