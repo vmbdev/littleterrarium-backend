@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.0.3] - 2023-12-06
+
+### Changes
+
+- TSConfig now uses ESM code. Fixes utils scripts not working in Node 20.
+
+### Fixes
+
+- [Utils] Create species and update search fields scripts work again.
+
 ## [1.0.2] - 2023-12-06
 
 ### Changes

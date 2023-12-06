@@ -1,8 +1,12 @@
 import path from 'node:path';
 import { Dirent } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { stat, readdir } from 'node:fs/promises';
 import express, { Express } from 'express';
 import { LTRes } from './helpers/ltres';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 type LanguageSet = {
   locales: string[];

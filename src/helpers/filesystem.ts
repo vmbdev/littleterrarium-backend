@@ -1,8 +1,12 @@
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, unlink, rm } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { files } from '../../littleterrarium.config';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 type Image = {
   [key: string]: string;
