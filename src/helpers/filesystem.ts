@@ -1,25 +1,25 @@
 import { createHash } from 'node:crypto';
-import { mkdir, rename, readFile, unlink, rm } from 'node:fs/promises';
+import { mkdir, readFile, unlink, rm } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
 import { files } from '../../littleterrarium.config';
 
 type Image = {
-  [key: string]: string,
-  full: string,
-  mid: string,
-  thumb: string
-}
+  [key: string]: string;
+  full: string;
+  mid: string;
+  thumb: string;
+};
 
 export type LocalFile = {
-  destination: string,
-  hash: string,
-  fieldname?: string,
-  mimetype?: string,
-  size?: number,
-  path: Image,
-  webp?: Image
-}
+  destination: string;
+  hash: string;
+  fieldname?: string;
+  mimetype?: string;
+  size?: number;
+  path: Image;
+  webp?: Image;
+};
 
 export const hashFile = async (filePath: string): Promise<string> => {
   const hashes = ['md5', 'sha1', 'sha256'];
@@ -30,24 +30,32 @@ export const hashFile = async (filePath: string): Promise<string> => {
     sum.update(buffer);
 
     return sum.digest('hex');
-  }
-  else throw new Error(`files.hash is not a valid algorithm. Valid algorithms: ${hashes}`);
-}
+  } else
+    throw new Error(
+      `files.hash is not a valid algorithm. Valid algorithms: ${hashes}`
+    );
+};
 
 // TODO: check if file exists before moving
-export const saveFile = async (filePath: string, destiny?: string): Promise<LocalFile> => {
+export const saveFile = async (
+  filePath: string,
+  destiny?: string
+): Promise<LocalFile> => {
   const hash = await hashFile(filePath);
-  const { newDir, newFilename, relativeDir } = await createDirectories(hash, destiny);
+  const { newDir, newFilename, relativeDir } = await createDirectories(
+    hash,
+    destiny
+  );
   const storedImages = await storeImage(filePath, newDir, {
     newFilename,
     relativeDir,
     webpOnly: files.webpOnly,
-    webp: files.webp
+    webp: files.webp,
   });
   const newLocalFile: LocalFile = {
     destination: newDir,
     hash,
-    path: storedImages[0]
+    path: storedImages[0],
   };
 
   if (files.webp && !files.webpOnly) newLocalFile.webp = storedImages[1];
@@ -55,16 +63,20 @@ export const saveFile = async (filePath: string, destiny?: string): Promise<Loca
   await removeFile(filePath);
 
   return newLocalFile;
-}
+};
 
 type StoreImageSettings = {
-  relativeDir: string,
-  newFilename: string,
-  webp?: boolean,
-  webpOnly?: boolean
-}
+  relativeDir: string;
+  newFilename: string;
+  webp?: boolean;
+  webpOnly?: boolean;
+};
 
-export const storeImage = async (source: string, dest: string, settings: StoreImageSettings): Promise<Image[]> => {
+export const storeImage = async (
+  source: string,
+  dest: string,
+  settings: StoreImageSettings
+): Promise<Image[]> => {
   const img = sharp(source, { failOnError: false }).rotate();
   const images: Image[] = [];
   const ext = settings.webpOnly ? 'webp' : await getImageExt(img);
@@ -73,12 +85,12 @@ export const storeImage = async (source: string, dest: string, settings: StoreIm
   const thumbnail = img.clone().resize({
     width: 400,
     height: 400,
-    fit: 'cover'
+    fit: 'cover',
   });
   const middleSize = img.clone().resize({
     width: 750,
     fit: 'contain',
-    position: 'left top'
+    position: 'left top',
   });
 
   if (!settings.webpOnly) {
@@ -89,7 +101,7 @@ export const storeImage = async (source: string, dest: string, settings: StoreIm
     images.push({
       full: `${settings.relativeDir}${filenames.full}`,
       mid: `${settings.relativeDir}${filenames.mid}`,
-      thumb: `${settings.relativeDir}${filenames.thumb}`
+      thumb: `${settings.relativeDir}${filenames.thumb}`,
     });
   }
 
@@ -103,20 +115,20 @@ export const storeImage = async (source: string, dest: string, settings: StoreIm
     images.push({
       full: `${settings.relativeDir}${webpFilenames.full}`,
       mid: `${settings.relativeDir}${webpFilenames.mid}`,
-      thumb: `${settings.relativeDir}${webpFilenames.thumb}`
-    })
+      thumb: `${settings.relativeDir}${webpFilenames.thumb}`,
+    });
   }
 
   return images;
-}
+};
 
 export const getFilenames = (name: string, ext: string): Image => {
   return {
     full: `${name}.${ext}`,
     mid: `${name}-mid.${ext}`,
-    thumb: `${name}-thumb.${ext}`
-  }
-}
+    thumb: `${name}-thumb.${ext}`,
+  };
+};
 
 export const createDirectories = async (hash: string, destiny?: string) => {
   let newFilename, newDir, relativeDir;
@@ -132,9 +144,8 @@ export const createDirectories = async (hash: string, destiny?: string) => {
 
     newFilename = hash.slice(counter);
     newDir = path.join(__dirname, '../../', files.folder.public, newPath);
-    relativeDir = `${files.folder.public}/${newPath}`
-  }
-  else {
+    relativeDir = `${files.folder.public}/${newPath}`;
+  } else {
     newFilename = hash;
     newDir = path.join(__dirname, '../../', files.folder.public, destiny);
     relativeDir = `${files.folder.public}/${destiny}`;
@@ -143,19 +154,21 @@ export const createDirectories = async (hash: string, destiny?: string) => {
   await mkdir(newDir, { recursive: true });
 
   return { newDir, newFilename, relativeDir };
-}
+};
 
 export const removeFile = async (filePath: string): Promise<void> => {
   try {
     await unlink(filePath);
   } catch (err) {}
-}
+};
 
 export const removeDir = async (dirPath: string): Promise<void> => {
   return await rm(dirPath, { recursive: true, force: true });
-}
+};
 
-export const getImageExt = async (image: sharp.Sharp): Promise<string | undefined> => {
+export const getImageExt = async (
+  image: sharp.Sharp
+): Promise<string | undefined> => {
   let metadata;
 
   try {
@@ -165,7 +178,7 @@ export const getImageExt = async (image: sharp.Sharp): Promise<string | undefine
   }
 
   return metadata.format;
-}
+};
 
 export default {
   hashFile,
@@ -173,5 +186,5 @@ export default {
   createDirectories,
   removeFile,
   removeDir,
-  getImageExt
+  getImageExt,
 };

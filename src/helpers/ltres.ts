@@ -1,17 +1,17 @@
-import { Location, Photo, Plant, Specie, User } from "@prisma/client"
+import { Location, Photo, Plant, Specie, User } from '@prisma/client';
 
 export type NavigationData = {
   prev?: {
-    id: number
-  },
+    id: number;
+  };
   next?: {
-    id: number
-  }
-}
+    id: number;
+  };
+};
 
 /**
  * Chainable class for HTTP responses
- * 
+ *
  * @class LTRes
  * @member {string} msg The response message
  * @member {number} code The HTTP corresponding to the response
@@ -19,37 +19,37 @@ export type NavigationData = {
  * @member {any} errorData Contains more information about the error
  */
 export class LTRes {
-  msg?: string
-  code?: number
+  msg?: string;
+  code?: number;
   data?: {
-    photo?: Photo
-    photos?: Photo[]
-    location?: Location
-    locations?: Location[]
-    user?: User
-    users?: User[]
-    plant?: Plant
-    plants?: Plant[]
-    specie?: Specie
-    species?: Specie[],
-    plantId?: number,
-    navigation?: NavigationData,
-    plantCoverId?: number
-  }
+    photo?: Photo;
+    photos?: Photo[];
+    location?: Location;
+    locations?: Location[];
+    user?: User;
+    users?: User[];
+    plant?: Plant;
+    plants?: Plant[];
+    specie?: Specie;
+    species?: Specie[];
+    plantId?: number;
+    navigation?: NavigationData;
+    plantCoverId?: number;
+  };
   errorData?: {
-    field?: string
-    values?: any[]
-    comp?: any
-  }
+    field?: string;
+    values?: any[];
+    comp?: any;
+  };
 
   constructor(options?: any) {
-    this.msg = options?.msg
+    this.msg = options?.msg;
   }
 
   /**
    * Shortcut to create a instance of LTRes with a code and a defaulted msg
-   * @param code 
-   * @returns 
+   * @param code
+   * @returns
    */
   static createCode(code: number): LTRes {
     const res = new LTRes();
@@ -178,5 +178,4 @@ export class LTRes {
     this.errorData.comp = comp;
     return this;
   }
-
 }

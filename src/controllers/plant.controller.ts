@@ -1,5 +1,5 @@
 import type { RequestHandler } from 'express';
-import { Condition, Prisma } from '@prisma/client'
+import { Condition, Prisma } from '@prisma/client';
 import { LTRes } from '../helpers/ltres';
 import { removePhoto } from '../helpers/photomanager';
 import { prepareForSortName } from '../helpers/textparser';
@@ -9,14 +9,14 @@ import dayjs from 'dayjs';
 
 const nextDate = (last: Date, freq: number): Date => {
   return dayjs(last).add(freq, 'days').toDate();
-}
+};
 
 /**
  * Express Middleware that creates a Plant object in the database.
  * Even though we receive a Plant-like object, we specify which properties
  * are allowed to be stored and check each of them for security sake.
  */
-const create : RequestHandler = async (req, res, next) => {
+const create: RequestHandler = async (req, res, next) => {
   const requiredFields = ['locationId'];
   const optionalFields = [
     'specieId',
@@ -31,13 +31,14 @@ const create : RequestHandler = async (req, res, next) => {
     'potType',
     'potSize',
     'soil',
-    'public'
+    'public',
   ];
   const data: any = {};
 
   for (const field of requiredFields) {
-    if (!req.body[field]) return next(LTRes.msg('MISSING_FIELD').errorField(field));
-    else if (field === 'locationId') data.locationId = req.parser.locationId;
+    if (!req.body[field]) {
+      return next(LTRes.msg('MISSING_FIELD').errorField(field));
+    } else if (field === 'locationId') data.locationId = req.parser.locationId;
     else data[field] = req.body[field];
   }
 
@@ -47,8 +48,7 @@ const create : RequestHandler = async (req, res, next) => {
         case 'condition': {
           if (!Condition.hasOwnProperty(req.body.condition)) {
             return next(LTRes.msg('PLANT_CONDITION'));
-          }
-          else data.condition = Condition[req.body.condition as Condition];
+          } else data.condition = Condition[req.body.condition as Condition];
 
           break;
         }
@@ -66,7 +66,7 @@ const create : RequestHandler = async (req, res, next) => {
           break;
         }
         case 'public': {
-          data.public = ((req.body.public === true) || (req.body.public === 'true'));
+          data.public = req.body.public === true || req.body.public === 'true';
           break;
         }
         case 'customName': {
@@ -82,22 +82,22 @@ const create : RequestHandler = async (req, res, next) => {
       }
     }
   }
-  
+
   // if water/fertiliser frequencies and last times are given,
   // calculate the next time it must be done
   if (
-    req.parser.waterFreq
-    && req.body.waterLast
-    && dayjs(req.parser.waterLast).isValid()
-    && +req.body.waterFreq
+    req.parser.waterFreq &&
+    req.body.waterLast &&
+    dayjs(req.parser.waterLast).isValid() &&
+    +req.body.waterFreq
   ) {
     data.waterNext = nextDate(req.body.waterLast, req.parser.waterFreq);
   }
   if (
-    req.parser.fertFreq
-    && req.body.fertLast
-    && dayjs(req.parser.fertLast).isValid()
-    && +req.body.fertFreq
+    req.parser.fertFreq &&
+    req.body.fertLast &&
+    dayjs(req.parser.fertLast).isValid() &&
+    +req.body.fertFreq
   ) {
     data.fertNext = nextDate(req.body.fertLast, req.parser.fertFreq);
   }
@@ -107,7 +107,7 @@ const create : RequestHandler = async (req, res, next) => {
   try {
     if (!data.customName && data.specieId) {
       const specie = await prisma.specie.findUnique({
-        where: { id: data.specieId }
+        where: { id: data.specieId },
       });
 
       data.sortName = specie?.name;
@@ -119,7 +119,7 @@ const create : RequestHandler = async (req, res, next) => {
   } catch (err) {
     next(LTRes.createCode(500));
   }
-}
+};
 
 /**
  * Express Middleware to request a list of Plant objects optionally
@@ -127,7 +127,7 @@ const create : RequestHandler = async (req, res, next) => {
  * The object contains one Photo object as well as the Specie object related
  * to it.
  */
-const find : RequestHandler = async (req, res, next) => {
+const find: RequestHandler = async (req, res, next) => {
   const query: Prisma.PlantFindManyArgs = {};
   let photos: Prisma.Plant$photosArgs | undefined;
 
@@ -135,43 +135,40 @@ const find : RequestHandler = async (req, res, next) => {
   // photo, in case the cover doesn't exists
   if (req.query.cover === 'true') {
     photos = { take: 1, select: { images: true } };
-  }
-  else photos = undefined;
+  } else photos = undefined;
 
   // if asking for a different user, return only the ones that are public
-  if (req.parser.userId && (req.parser.userId !== req.auth.userId)) {
+  if (req.parser.userId && req.parser.userId !== req.auth.userId) {
     query.where = {
       ownerId: req.parser.userId,
-      public: true
+      public: true,
     };
 
     if (photos) photos.where = { public: true };
-  }
-  else query.where = { ownerId: req.auth.userId };
+  } else query.where = { ownerId: req.auth.userId };
 
   if (req.query.filter) {
     query.where = {
       ...query.where,
       sortName: {
         contains: prepareForSortName(req.query.filter as string),
-      }
-    }
+      },
+    };
   }
 
-  if (req.query.limit && (+req.query.limit > 0)) {
+  if (req.query.limit && +req.query.limit > 0) {
     query.take = +req.query.limit;
-  }
-  else query.take = plantsConfig.number;
+  } else query.take = plantsConfig.number;
 
   if (req.query.cursor && +req.query.cursor) {
-    query.cursor = { id: +req.query.cursor }
+    query.cursor = { id: +req.query.cursor };
     query.skip = 1;
   }
 
   if (req.query.sort) {
     let order: 'asc' | 'desc' = 'asc';
 
-    if (req.query.order && (req.query.order === 'desc')) order = 'desc';
+    if (req.query.order && req.query.order === 'desc') order = 'desc';
 
     if (req.query.sort === 'name') query.orderBy = [{ sortName: order }];
     else if (req.query.sort === 'date') query.orderBy = [{ createdAt: order }];
@@ -181,13 +178,13 @@ const find : RequestHandler = async (req, res, next) => {
     photos: photos ? photos : false,
     cover: photos ? true : false,
     specie: {
-      select: { name: true, commonName: true }
-    }
+      select: { name: true, commonName: true },
+    },
   };
 
   const plants = await prisma.plant.findMany(query);
   res.send(plants);
-}
+};
 
 /**
  * Express Middleware to request a Plant object by id.
@@ -198,30 +195,28 @@ const findOne: RequestHandler = async (req, res, next) => {
   const query: Prisma.PlantFindUniqueArgs = { where: { id: req.parser.id } };
   query.include = {
     // photos: true, //(req.query.photos === 'true'),
-    cover: (req.query.cover === 'true'),
-    specie: true
-  }
+    cover: req.query.cover === 'true',
+    specie: true,
+  };
 
   // if user requests cover, we send both the cover relationship and one
   // photo, in case the cover doesn't exists
   if (req.query.cover === 'true') {
     query.include.photos = {
       take: 1,
-      select: { images: true }
-    }
+      select: { images: true },
+    };
   }
 
   const plant = await prisma.plant.findUnique(query);
 
   // if requesting user is not the owner, send only if it's public
   if (plant) {
-    if (plant.public || (plant.ownerId === req.auth.userId)) {
+    if (plant.public || plant.ownerId === req.auth.userId) {
       res.send(plant);
-    }
-    else return next(LTRes.createCode(403));
-  }
-  else next(LTRes.msg('PLANT_NOT_FOUND').setCode(404));
-}
+    } else return next(LTRes.createCode(403));
+  } else next(LTRes.msg('PLANT_NOT_FOUND').setCode(404));
+};
 
 /**
  * Express Middleware to update an existing Plant object by id.
@@ -245,7 +240,7 @@ const modify: RequestHandler = async (req, res, next) => {
     'soil',
     'public',
     'removeSpecie',
-    'removeCover'
+    'removeCover',
   ];
   const data: any = {};
 
@@ -257,20 +252,17 @@ const modify: RequestHandler = async (req, res, next) => {
 
           if (condition === null) {
             data.condition = null;
-          }
-          else if (Condition.hasOwnProperty(condition)) {
+          } else if (Condition.hasOwnProperty(condition)) {
             data.condition = Condition[condition as Condition];
-          }
-          else return next(LTRes.msg('PLANT_CONDITION'));
+          } else return next(LTRes.msg('PLANT_CONDITION'));
 
           break;
         }
         case 'customName': {
           // otherwise it screws sorting
-          if (!req.body.customName || (req.body.customName === '')) {
+          if (!req.body.customName || req.body.customName === '') {
             data.customName = null;
-          }
-          else {
+          } else {
             data.customName = req.body.customName;
             data.sortName = prepareForSortName(req.body.customName);
           }
@@ -293,8 +285,7 @@ const modify: RequestHandler = async (req, res, next) => {
           if (lastField) {
             const date = new Date(lastField);
             data[field] = date;
-          }
-          else data[field] = null;
+          } else data[field] = null;
 
           break;
         }
@@ -307,7 +298,7 @@ const modify: RequestHandler = async (req, res, next) => {
           break;
         }
         case 'public': {
-          data.public = ((req.body.public === true) || (req.body.public === 'true'));
+          data.public = req.body.public === true || req.body.public === 'true';
           break;
         }
         default:
@@ -320,14 +311,14 @@ const modify: RequestHandler = async (req, res, next) => {
     let plant = await prisma.plant.update({
       where: {
         id: req.parser.id,
-        ownerId: req.auth.userId
+        ownerId: req.auth.userId,
       },
       // TODO: make it optional?
       include: {
         cover: true,
-        specie: true
+        specie: true,
       },
-      data
+      data,
     });
 
     const plantUpdatedData: any = {};
@@ -342,12 +333,11 @@ const modify: RequestHandler = async (req, res, next) => {
     if (!plant.customName) {
       if (plant.specieId) {
         const specie = await prisma.specie.findUnique({
-          where: { id: plant.specieId }
+          where: { id: plant.specieId },
         });
 
         plantUpdatedData.sortName = specie?.name;
-      }
-      else plantUpdatedData.sortName = null;
+      } else plantUpdatedData.sortName = null;
     }
 
     /**
@@ -362,25 +352,23 @@ const modify: RequestHandler = async (req, res, next) => {
 
     if (plant.waterFreq && plant.waterLast) {
       plantUpdatedData.waterNext = nextDate(plant.waterLast, plant.waterFreq);
-    }
-    else if (!plant.waterLast) plantUpdatedData.waterNext = null;
+    } else plantUpdatedData.waterNext = null;
 
     if (plant.fertFreq && plant.fertLast) {
       plantUpdatedData.fertNext = nextDate(plant.fertLast, plant.fertFreq);
-    }
-    else if (!plant.fertLast) plantUpdatedData.fertNext = null;
+    } else plantUpdatedData.fertNext = null;
 
     if (Object.keys(plantUpdatedData).length > 0) {
       plant = await prisma.plant.update({
         where: {
           id: req.parser.id,
-          ownerId: req.auth.userId
+          ownerId: req.auth.userId,
         },
         include: {
           cover: true,
-          specie: true
+          specie: true,
         },
-        data: plantUpdatedData
+        data: plantUpdatedData,
       });
     }
 
@@ -388,24 +376,22 @@ const modify: RequestHandler = async (req, res, next) => {
   } catch (err) {
     next(LTRes.msg('PLANT_NOT_VALID'));
   }
-}
+};
 
 const getPhotos: RequestHandler = async (req, res, next) => {
   const plant = await prisma.plant.findUnique({
     select: { public: true, ownerId: true },
-    where: { id: req.parser.id }
+    where: { id: req.parser.id },
   });
 
   if (!plant) return next(LTRes.createCode(404));
   else {
-    if ((!plant.public) && (plant.ownerId !== req.auth.userId)) {
+    if (!plant.public && plant.ownerId !== req.auth.userId) {
       return next(LTRes.createCode(403));
-    }
-
-    else {
+    } else {
       const query: any = {
         where: {
-          plantId: req.parser.id
+          plantId: req.parser.id,
         },
         select: {
           id: true,
@@ -414,37 +400,32 @@ const getPhotos: RequestHandler = async (req, res, next) => {
           public: true,
           ownerId: true,
           plantId: true,
-          takenAt: true
+          takenAt: true,
         },
-        orderBy: [
-          { takenAt: 'asc' },
-          { id: 'desc' }
-        ],
-      }
- 
+        orderBy: [{ takenAt: 'asc' }, { id: 'desc' }],
+      };
+
       const photos = await prisma.photo.findMany(query);
-  
+
       res.send(photos);
     }
   }
-}
+};
 
 const getCover: RequestHandler = async (req, res, next) => {
   if (req.parser.id) {
     const plant = await prisma.plant.findUnique({
       select: { coverId: true, ownerId: true, public: true },
-      where: { id: req.parser.id }
+      where: { id: req.parser.id },
     });
 
     if (plant) {
-      if ((plant.ownerId === req.auth.userId) || plant.public) {
+      if (plant.ownerId === req.auth.userId || plant.public) {
         res.send({ coverId: plant.coverId });
-      }
-      else return next(LTRes.createCode(403));
-    }
-    else next(LTRes.msg('PLANT_NOT_FOUND').setCode(404));
+      } else return next(LTRes.createCode(403));
+    } else next(LTRes.msg('PLANT_NOT_FOUND').setCode(404));
   }
-}
+};
 
 /**
  * Remove a Plant object by its id.
@@ -453,9 +434,9 @@ const remove: RequestHandler = async (req, res, next) => {
   const plant = await prisma.plant.delete({
     where: {
       id: req.parser.id,
-      ownerId: req.auth.userId
+      ownerId: req.auth.userId,
     },
-    include: { photos: true }
+    include: { photos: true },
   });
 
   if (plant) {
@@ -464,9 +445,8 @@ const remove: RequestHandler = async (req, res, next) => {
       removePhoto(photo.id, req.auth.userId);
     }
     res.send(LTRes.createCode(204));
-  }
-  else next(LTRes.msg('PLANT_NOT_VALID'));
-}
+  } else next(LTRes.msg('PLANT_NOT_VALID'));
+};
 
 export default {
   create,
@@ -475,5 +455,5 @@ export default {
   getPhotos,
   getCover,
   modify,
-  remove
+  remove,
 };

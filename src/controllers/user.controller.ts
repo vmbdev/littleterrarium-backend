@@ -7,11 +7,11 @@ import prisma from '../prismainstance';
 import Password from '../helpers/password';
 import { LTRes } from '../helpers/ltres';
 import mailer from '../helpers/mailer';
-import { username as usernameConfig } from '../../littleterrarium.config'
+import { username as usernameConfig } from '../../littleterrarium.config';
 
-const isEmail = (email: string): boolean => {
-  return (email.match(/^\S+@\S+\.\S+$/i) !== null);
-}
+const isEmailValid = (email: string): boolean => {
+  return email.match(/^\S+@\S+\.\S+$/i) !== null;
+};
 
 const removePassword = (user: User): User => {
   // to remove the password hash from the object
@@ -19,7 +19,7 @@ const removePassword = (user: User): User => {
   delete partialUser.password;
 
   return partialUser as User;
-}
+};
 
 const isUsernameValid = (username: string): boolean => {
   const min = usernameConfig.minLength;
@@ -28,7 +28,7 @@ const isUsernameValid = (username: string): boolean => {
   const regexp = new RegExp(rtest);
 
   return regexp.test(username);
-}
+};
 
 const register: RequestHandler = async (req, res, next) => {
   const requiredFields = ['username', 'password', 'email'];
@@ -37,7 +37,7 @@ const register: RequestHandler = async (req, res, next) => {
     'lastname',
     'public',
     'bio',
-    'preferences'
+    'preferences',
   ];
   const data: any = {};
 
@@ -52,21 +52,19 @@ const register: RequestHandler = async (req, res, next) => {
 
       if (passwdCheck.valid) {
         data.password = await Password.hash(req.body.password);
+      } else {
+        return next(
+          LTRes.msg('USER_PASSWD_INVALID').errorComp(passwdCheck.comp)
+        );
       }
-      else {
-        return next(LTRes.msg('USER_PASSWD_INVALID').errorComp(passwdCheck.comp));
-      }
-    }
+    } else {
+      const isUsername =
+        field === 'username' && !isUsernameValid(req.body.username);
+      const isEmail = field === 'email' && !isEmailValid(req.body.email);
 
-    else {
-      if (
-        (field === 'username' && !isUsernameValid(req.body.username))
-        || (field === 'email' && !isEmail(req.body.email))
-      ) {
+      if (isUsername || isEmail) {
         return next(LTRes.msg('USER_FIELD_INVALID').errorField(field));
-      }
-
-      else data[field] = req.body[field];
+      } else data[field] = req.body[field];
     }
   }
 
@@ -74,9 +72,8 @@ const register: RequestHandler = async (req, res, next) => {
   for (const field of optionalFields) {
     if (req.body[field]) {
       if (field === 'public') {
-        data.public = (req.body.public === true || req.body.public === 'true');
-      }
-      else data[field] = req.body[field];
+        data.public = req.body.public === true || req.body.public === 'true';
+      } else data[field] = req.body[field];
     }
   }
 
@@ -84,7 +81,7 @@ const register: RequestHandler = async (req, res, next) => {
   if (req.disk.file) {
     data.avatar = {
       path: req.disk.file.path,
-      webp: req.disk.file.webp ? req.disk.file.webp : undefined
+      webp: req.disk.file.webp ? req.disk.file.webp : undefined,
     };
   }
 
@@ -99,10 +96,9 @@ const register: RequestHandler = async (req, res, next) => {
   } catch (err: any) {
     if (err.code === 'P2002') {
       next(LTRes.msg('USER_FIELD_EXISTS').errorField(err.meta.target[0]));
-    }
-    else next(LTRes.createCode(500));
+    } else next(LTRes.createCode(500));
   }
-}
+};
 
 const find: RequestHandler = async (req, res, next) => {
   const conditions: any = {};
@@ -115,8 +111,7 @@ const find: RequestHandler = async (req, res, next) => {
       conditions.id = req.auth.userId;
       email = true;
       preferences = true;
-    }
-    else return next(LTRes.createCode(401));
+    } else return next(LTRes.createCode(401));
   }
 
   const user = await prisma.user.findUnique({
@@ -133,17 +128,19 @@ const find: RequestHandler = async (req, res, next) => {
       role: true,
       public: true,
       createdAt: true,
-    }
+    },
   });
 
   if (user) {
-    if (!req.params.username || user.public || req.session.role === Role.ADMIN) {
+    if (
+      !req.params.username ||
+      user.public ||
+      req.session.role === Role.ADMIN
+    ) {
       res.send(user);
-    }
-    else next(LTRes.msg('USER_PRIVATE').setCode(403));
-  }
-  else next(LTRes.msg('USER_NOT_FOUND'));
-}
+    } else next(LTRes.msg('USER_PRIVATE').setCode(403));
+  } else next(LTRes.msg('USER_NOT_FOUND'));
+};
 
 const findById: RequestHandler = async (req, res, next) => {
   const conditions: any = {};
@@ -163,21 +160,19 @@ const findById: RequestHandler = async (req, res, next) => {
       role: true,
       public: true,
       createdAt: true,
-    }
+    },
   });
 
   if (user) {
     if (
-      user.public
-      || req.auth.userId === req.parser.id
-      || req.session.role === Role.ADMIN
+      user.public ||
+      req.auth.userId === req.parser.id ||
+      req.session.role === Role.ADMIN
     ) {
       res.send(user);
-    }
-    else next(LTRes.msg('USER_PRIVATE').setCode(403));
-  }
-  else next(LTRes.msg('USER_NOT_FOUND'));
-}
+    } else next(LTRes.msg('USER_PRIVATE').setCode(403));
+  } else next(LTRes.msg('USER_NOT_FOUND'));
+};
 
 const modify: RequestHandler = async (req, res, next) => {
   const fields = [
@@ -190,45 +185,39 @@ const modify: RequestHandler = async (req, res, next) => {
     'public',
     'bio',
     'avatar',
-    'preferences'
+    'preferences',
   ];
   const data: any = {};
 
   for (const requestedField of Object.keys(req.body)) {
     if (fields.includes(requestedField)) {
-      if (
-        (requestedField === 'username' && !isUsernameValid(req.body.username))
-        || (requestedField === 'email' && !isEmail(req.body.email))
-      ) {
-        return next(LTRes.msg('USER_FIELD_INVALID').errorField(requestedField));
-      }
+      const isUsername =
+        requestedField === 'username' && !isUsernameValid(req.body.username);
+      const isEmail =
+        requestedField === 'email' && !isEmailValid(req.body.email);
 
-      else if (requestedField === 'password') {
+      if (isUsername || isEmail) {
+        return next(LTRes.msg('USER_FIELD_INVALID').errorField(requestedField));
+      } else if (requestedField === 'password') {
         const passwdCheck = Password.check(req.body.password);
 
         if (passwdCheck.valid) {
           data.password = await Password.hash(req.body.password);
+        } else {
+          return next(
+            LTRes.msg('USER_PASSWD_INVALID').errorComp(passwdCheck.comp)
+          );
         }
-        else {
-          return next(LTRes.msg('USER_PASSWD_INVALID').errorComp(passwdCheck.comp));
-        }
-      }
-
-      else if (requestedField === 'role') {
+      } else if (requestedField === 'role') {
         if (
           req.session.role === Role.ADMIN
           && Role.hasOwnProperty(req.body.role)
         ) {
           data.role = req.body.role;
-        }
-        else return next(LTRes.createCode(403));
-      }
-
-      else if (requestedField === 'public') {
-        data.public = (req.body.public === true || req.body.public === 'true');
-      }
-
-      else data[requestedField] = req.body[requestedField];
+        } else return next(LTRes.createCode(403));
+      } else if (requestedField === 'public') {
+        data.public = req.body.public === true || req.body.public === 'true';
+      } else data[requestedField] = req.body[requestedField];
     }
   }
 
@@ -237,37 +226,37 @@ const modify: RequestHandler = async (req, res, next) => {
   else if (req.disk.file) {
     data.avatar = {
       path: req.disk.file.path,
-      webp: req.disk.file.webp ? req.disk.file.webp : undefined
+      webp: req.disk.file.webp ? req.disk.file.webp : undefined,
     };
   }
 
   try {
     const user = await prisma.user.update({
       where: { id: req.auth.userId },
-      data
+      data,
     });
 
     res.send(removePassword(user));
   } catch (err: any) {
     if (err.code === 'P2002') {
-      return next(LTRes.msg('USER_FIELD_EXISTS').errorField(err.meta.target[0]));
-    }
-    else return next(LTRes.createCode(500));
+      return next(
+        LTRes.msg('USER_FIELD_EXISTS').errorField(err.meta.target[0])
+      );
+    } else return next(LTRes.createCode(500));
   }
-}
+};
 
 // TODO: removal of user
-const remove: RequestHandler = (req, res, next) => {
-}
+const remove: RequestHandler = (req, res, next) => {};
 
 const signin: RequestHandler = async (req, res, next) => {
   const { username, password } = req.body;
 
   if (username && password) {
     // did the user logged in with the username or with the password?
-    const signinToken = isEmail(username) ? 'email' : 'username';
+    const signinToken = isEmailValid(username) ? 'email' : 'username';
     const user = await prisma.user.findFirst({
-      where: { [signinToken]: username }
+      where: { [signinToken]: username },
     });
 
     if (user) {
@@ -279,19 +268,18 @@ const signin: RequestHandler = async (req, res, next) => {
         req.session.userId = user.id;
 
         res.send(removePassword(user));
-      }
-      else next(LTRes.msg('USER_DATA_INCORRECT').setCode(401));
+      } else next(LTRes.msg('USER_DATA_INCORRECT').setCode(401));
     }
     // we never give information on whether the user exists or not here
     else next(LTRes.msg('USER_DATA_INCORRECT').setCode(401));
   }
-}
+};
 
 const logout: RequestHandler = (req, res, next) => {
   req.session.destroy(() => {
     res.send(LTRes.createCode(204));
   });
-}
+};
 
 const forgottenPassword: RequestHandler = async (req, res, next) => {
   const userRef = req.body.userRef;
@@ -300,11 +288,10 @@ const forgottenPassword: RequestHandler = async (req, res, next) => {
 
   let user: User | null;
 
-  if (isEmail(userRef)) {
-    user = await prisma.user.findUnique({ where: { email: userRef }});
-  }
-  else {
-    user = await prisma.user.findUnique({ where: { username: userRef }});
+  if (isEmailValid(userRef)) {
+    user = await prisma.user.findUnique({ where: { email: userRef } });
+  } else {
+    user = await prisma.user.findUnique({ where: { username: userRef } });
   }
 
   if (!user) {
@@ -316,34 +303,33 @@ const forgottenPassword: RequestHandler = async (req, res, next) => {
 
   const tokenRes = await prisma.userRecoveryToken.upsert({
     where: {
-      userId: user.id
+      userId: user.id,
     },
     update: {
       token,
-      expiry: tomorrow
+      expiry: tomorrow,
     },
     create: {
       userId: user.id,
       token,
-      expiry: tomorrow
-    }
+      expiry: tomorrow,
+    },
   });
 
   if (tokenRes) {
     mailer.sendUserRecovery(user.email, tokenRes.token, tokenRes.userId);
     res.send(LTRes.createCode(204));
-  }
-  else next(LTRes.createCode(500));
-}
+  } else next(LTRes.createCode(500));
+};
 
 const restore: RequestHandler = async (req, res, next) => {
-  const { token, password }: { token: string, password: string } = req.body;
+  const { token, password }: { token: string; password: string } = req.body;
   const userId: number = +req.body.userId;
-  
+
   if (!token || !password || !userId) return next(LTRes.createCode(400));
-  
+
   const savedToken = await prisma.userRecoveryToken.findUnique({
-    where: { token, userId }
+    where: { token, userId },
   });
 
   if (savedToken) {
@@ -358,21 +344,19 @@ const restore: RequestHandler = async (req, res, next) => {
         await prisma.user.update({
           where: { id: userId },
           data: {
-            password: await Password.hash(password)
-          }
+            password: await Password.hash(password),
+          },
         });
 
-        await prisma.userRecoveryToken.delete({ where: { userId }});
+        await prisma.userRecoveryToken.delete({ where: { userId } });
 
         res.send(LTRes.createCode(204));
       } catch (err) {
         return next(LTRes.createCode(500));
       }
-    }
-    else return next(LTRes.msg('USER_PASSWD_INVALID').errorComp(pcheck.comp));
-  }
-  else return next(LTRes.msg('USER_TOKEN_INVALID').setCode(400));
-}
+    } else return next(LTRes.msg('USER_PASSWD_INVALID').errorComp(pcheck.comp));
+  } else return next(LTRes.msg('USER_TOKEN_INVALID').setCode(400));
+};
 
 const verifyToken: RequestHandler = async (req, res, next) => {
   const { token } = req.body;
@@ -381,20 +365,17 @@ const verifyToken: RequestHandler = async (req, res, next) => {
   if (!token || !userId) return next(LTRes.createCode(400));
 
   const savedToken = await prisma.userRecoveryToken.findUnique({
-    where: { token, userId }
+    where: { token, userId },
   });
 
   if (savedToken) {
     if (dayjs(savedToken.expiry).isBefore(dayjs())) {
       return next(LTRes.msg('USER_TOKEN_EXPIRED').setCode(400));
-    }
-    else res.send(LTRes.createCode(204))
-  }
-  else return next(LTRes.msg('USER_TOKEN_INVALID').setCode(400));
-}
+    } else res.send(LTRes.createCode(204));
+  } else return next(LTRes.msg('USER_TOKEN_INVALID').setCode(400));
+};
 
-const verify: RequestHandler = async (req, res, next) => {
-}
+const verify: RequestHandler = async (req, res, next) => {};
 
 const checkPassword: RequestHandler = (req, res, next) => {
   const { password } = req.body;
@@ -405,15 +386,15 @@ const checkPassword: RequestHandler = (req, res, next) => {
     if (pcheck.valid) res.send(LTRes.msg('PASSWD_VALID'));
     else next(LTRes.msg('USER_PASSWD_INVALID').errorComp(pcheck.comp));
   } else return next(LTRes.createCode(400));
-}
+};
 
 const passwordRequirements: RequestHandler = (req, res, next) => {
   res.send(Password.requirements());
-}
+};
 
 const usernameRequirements: RequestHandler = (req, res, next) => {
   res.send(usernameConfig);
-}
+};
 
 export default {
   register,
@@ -429,5 +410,5 @@ export default {
   verify,
   checkPassword,
   passwordRequirements,
-  usernameRequirements
+  usernameRequirements,
 };

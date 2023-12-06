@@ -9,11 +9,11 @@ const uploader = () => {
         cb(null, path.join(__dirname, '../../temp'));
       },
       filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
         cb(null, file.fieldname + '-' + uniqueSuffix);
-      }
-    })
+      },
+    }),
   });
-}
+};
 
 export default uploader;

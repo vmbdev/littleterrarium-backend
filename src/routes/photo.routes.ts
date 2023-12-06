@@ -8,7 +8,8 @@ import parser from '../middlewares/parser';
 const router = Router();
 const uploader = multerUploader();
 
-router.post('/',
+router.post(
+  '/',
   auth.self,
   uploader.array('photo', 10),
   parser.integers({ plantId: true }),
@@ -17,15 +18,21 @@ router.post('/',
   photo.create
 );
 router.get('/:id', parser.integers({ id: true }), photo.findOne);
-router.get('/:id/navigation', parser.integers({ id: true }), photo.getNavigation);
-router.put('/',
+router.get(
+  '/:id/navigation',
+  parser.integers({ id: true }),
+  photo.getNavigation
+);
+router.put(
+  '/',
   auth.self,
   auth.checkOwnership('photo'),
   auth.checkRelationship('plant', 'plantId'),
   parser.integers({ id: true }),
   photo.modify
 );
-router.delete('/:id',
+router.delete(
+  '/:id',
   auth.self,
   auth.checkOwnership('photo'),
   parser.integers({ id: true }),

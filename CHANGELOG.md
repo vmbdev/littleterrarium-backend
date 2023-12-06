@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.0.2] - 2023-12-06
+
+### Changes
+
+- Code cleanup.
+
+### Fixed
+
+- Parser now sets optional parameters as null when present but empty.
+
 ## [1.0.1] - 2023-11-30
 
 ### Added
@@ -8,7 +18,9 @@
 
 ## [1.0.0] - 2023-01-30
 
-First fully working version of the Little Terrarium backend! Of course, there's a lot to do, add and improve yet, but this is the first fully working version. From now on, changes will be added to this file.
+First fully working version of the Little Terrarium backend! Of course, there's
+a lot to do, add and improve yet, but this is the first fully working version.
+From now on, changes will be added to this file.
 
 ### Changes
 

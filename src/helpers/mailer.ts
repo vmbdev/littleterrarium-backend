@@ -39,7 +39,7 @@ export class Mailer {
         <a href="${recoveryUrl}">
           ${recoveryUrl}
         </a>
-      `
+      `,
     });
   }
 }

@@ -11,57 +11,60 @@ import FileSystem, { LocalFile } from '../helpers/filesystem';
 declare global {
   namespace Express {
     type Disk = {
-      file?: LocalFile,
-      files?: LocalFile[]
-    }
+      file?: LocalFile;
+      files?: LocalFile[];
+    };
 
     interface Request {
-      disk: Disk,
+      disk: Disk;
     }
   }
 }
 
 type DiskOptions = {
-  protocol?: string,
-  host?: string,
-  destiny?: string
-}
+  protocol?: string;
+  host?: string;
+  destiny?: string;
+};
 
 export const generateDisk: RequestHandler = (req, res, next) => {
   req.disk = {};
 
   next();
-}
+};
 
 const processFile = async (file: Express.Multer.File, options: DiskOptions) => {
-  const diskFile: LocalFile =
-    await FileSystem.saveFile(file.path, options.destiny);
+  const diskFile: LocalFile = await FileSystem.saveFile(
+    file.path,
+    options.destiny
+  );
 
   diskFile.fieldname = file.fieldname;
   diskFile.mimetype = file.mimetype;
   diskFile.size = file.size;
 
   return diskFile;
-}
+};
 
 export const image = (directory?: string) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     if (req.file) {
       try {
         req.disk.file = await processFile(req.file, {
-          destiny: directory ? `user/${req.auth.userId}/${directory}/` : undefined
+          destiny: directory
+            ? `user/${req.auth.userId}/${directory}/`
+            : undefined,
         });
       } catch (err: any) {
-        if (err.error && (err.error === 'IMG_NOT_VALID')) {
+        if (err.error && err.error === 'IMG_NOT_VALID') {
           return next(LTRes.msg('IMG_NOT_VALID'));
-        }
-        else return next(LTRes.createCode(500));
+        } else return next(LTRes.createCode(500));
       }
     }
 
     next();
-  }
-}
+  };
+};
 
 export const gallery = (directory?: string) => {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -71,25 +74,24 @@ export const gallery = (directory?: string) => {
       for (const file in req.files) {
         try {
           const diskFile = await processFile((req.files as any)[file], {
-            destiny: directory ?
-              `user/${req.auth.userId}/${directory}/` :
-              undefined
+            destiny: directory
+              ? `user/${req.auth.userId}/${directory}/`
+              : undefined,
           });
 
           req.disk.files.push(diskFile);
         } catch (err: any) {
-          if (err.error && (err.error === 'IMG_NOT_VALID')) {
+          if (err.error && err.error === 'IMG_NOT_VALID') {
             return next(LTRes.msg('IMG_NOT_VALID'));
-          }
-          else return next(LTRes.createCode(500));
+          } else return next(LTRes.createCode(500));
         }
       }
     }
     next();
-  }
-}
+  };
+};
 
 export default {
   image,
-  gallery
+  gallery,
 };

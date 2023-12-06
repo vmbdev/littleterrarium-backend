@@ -5,11 +5,14 @@ import express, { Express } from 'express';
 import { LTRes } from './helpers/ltres';
 
 type LanguageSet = {
-  locales: string[],
-  default?: string
-}
+  locales: string[];
+  default?: string;
+};
 
-export const enableAngularRouting = async (app: Express, defaultLanguage?: string) => {
+export const enableAngularRouting = async (
+  app: Express,
+  defaultLanguage?: string
+) => {
   // FIXME: allow a configurable/array of options
   const distPath = path.join(__dirname, '../dist/littleterrarium/browser');
   const languagesToSend: LanguageSet = { locales: [] };
@@ -23,10 +26,12 @@ export const enableAngularRouting = async (app: Express, defaultLanguage?: strin
   try {
     distStat = await stat(distPath);
   } catch {
-    console.log('[Angular] Frontend routing is not enabled due to missing files.');
+    console.log(
+      '[Angular] Frontend routing is not enabled due to missing files.'
+    );
     return;
   }
-  
+
   if (distStat.isDirectory()) {
     console.log(`[Angular] Directory ${distPath} exists`);
 
@@ -34,11 +39,10 @@ export const enableAngularRouting = async (app: Express, defaultLanguage?: strin
       .filter((entry: Dirent) => entry.isDirectory())
       .map((dir: Dirent) => dir.name);
 
-    // // if only an 'assets' folder exists, then i18n is not enabled
-    if ((languageList.length === 1) && (languageList[0] === 'assets')) {
+    // if only an 'assets' folder exists, then i18n is not enabled
+    if (languageList.length === 1 && languageList[0] === 'assets') {
       await setAngularRoutes(app, '/', '*', distPath);
-    }
-    else {
+    } else {
       for (const language of languageList) {
         if (language !== defaultLanguage) {
           const res = await setAngularRoutes(
@@ -49,7 +53,7 @@ export const enableAngularRouting = async (app: Express, defaultLanguage?: strin
             language
           );
 
-          if (res) languagesToSend.locales.unshift(language)
+          if (res) languagesToSend.locales.unshift(language);
         }
       }
 
@@ -57,13 +61,17 @@ export const enableAngularRouting = async (app: Express, defaultLanguage?: strin
         await setAngularRoutes(app, '/', '*', distPath, defaultLanguage);
         languagesToSend.default = defaultLanguage;
       }
-
     }
   }
+};
 
-}
-
-const setAngularRoutes = async (app: Express, dir: string, url: string, distPath: string, language?: string): Promise<boolean> => {
+const setAngularRoutes = async (
+  app: Express,
+  dir: string,
+  url: string,
+  distPath: string,
+  language?: string
+): Promise<boolean> => {
   const indexPath = path.join(distPath, language ? language : '', 'index.html');
 
   try {
@@ -73,12 +81,18 @@ const setAngularRoutes = async (app: Express, dir: string, url: string, distPath
       res.sendFile(indexPath);
     });
 
-    console.log(`[Angular] Enabled routing ${language ? `for ${language}` : '' } to ${url}`);
+    console.log(
+      `[Angular] Enabled routing ${language ? `for ${language}` : ''} to ${url}`
+    );
 
     return true;
   } catch {
-    console.log(`[Angular] Can't enable ${language ? `${language} language` : ''} routing: missing index.html`);
+    console.log(
+      `[Angular] Can't enable ${
+        language ? `${language} language` : ''
+      } routing: missing index.html`
+    );
 
     return false;
   }
-}
+};

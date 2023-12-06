@@ -5,7 +5,8 @@ import plant from '../controllers/plant.controller';
 
 const router = Router();
 
-router.post('/', 
+router.post(
+  '/',
   auth.self,
   parser.integers({
     locationId: true,
@@ -22,7 +23,8 @@ router.get('/user/:userId', parser.integers({ userId: true }), plant.find);
 router.get('/:id?', parser.integers({ id: false }), plant.findOne);
 router.get('/:id/photos', parser.integers({ id: true }), plant.getPhotos);
 router.get('/:id/cover', parser.integers({ id: true }), plant.getCover);
-router.put('/',
+router.put(
+  '/',
   auth.self,
   auth.checkOwnership('plant'),
   auth.checkRelationship('location', 'locationId'),
@@ -38,7 +40,8 @@ router.put('/',
   }),
   plant.modify
 );
-router.delete('/:id',
+router.delete(
+  '/:id',
   auth.self,
   auth.checkOwnership('plant'),
   parser.integers({ id: true }),

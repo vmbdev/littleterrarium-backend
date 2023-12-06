@@ -23,7 +23,7 @@ const insertSpeciesNames = () => {
 
     species.push({
       family: parts[2],
-      name: name.toLowerCase()
+      name: name.toLowerCase(),
     });
   });
 
@@ -34,15 +34,16 @@ const insertSpeciesNames = () => {
       const speciesPart = species.splice(0, 1000);
 
       try {
-        const bulkCreate = await prisma.specie.createMany({ data: speciesPart });
+        const bulkCreate = await prisma.specie.createMany({
+          data: speciesPart,
+        });
         console.log(`Inserted ${bulkCreate.count} species into the database`);
-      } catch(err) {
+      } catch (err) {
         console.log(`Error when inserting the data: ${err}`);
       }
     }
   });
-}
-
+};
 
 const insertSpeciesCommonNames = () => {
   const file = path.join(__dirname, '/res/commonnames.csv');
@@ -58,7 +59,7 @@ const insertSpeciesCommonNames = () => {
     if (parts.length === 2) {
       species.push({
         where: { name: parts[1] },
-        data: { commonName: parts[0] }
+        data: { commonName: parts[0] },
       });
     }
   });
@@ -66,20 +67,24 @@ const insertSpeciesCommonNames = () => {
   readline.on('close', async () => {
     let count = 0;
 
-    console.log(`Inserting ${species.length} species common names in the database...`);
+    console.log(
+      `Inserting ${species.length} species common names in the database...`
+    );
 
     for (const specie of species) {
       try {
         await prisma.specie.updateMany(specie);
         count++;
-      } catch(err) {
+      } catch (err) {
         console.log(err);
       }
     }
 
-    console.log(`Inserted ${count} common names (of ${lines} in the file) into the species database`);
+    console.log(
+      `Inserted ${count} common names (of ${lines} in the file) into the species database`
+    );
   });
-}
+};
 
 insertSpeciesNames();
 insertSpeciesCommonNames();

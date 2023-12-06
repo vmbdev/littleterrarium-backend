@@ -5,7 +5,7 @@ import { prepareForSortName } from '../src/helpers/textparser';
 const main = async (): Promise<number> => {
   const plantsToUpdate: PrismaPromise<Plant>[] = [];
   const plants = await prisma.plant.findMany({
-    include: { specie: true }
+    include: { specie: true },
   });
 
   for (const plant of plants) {
@@ -17,12 +17,11 @@ const main = async (): Promise<number> => {
 
     if (sortName) {
       const updateQuery: Prisma.PlantUpdateArgs = {
-        where:  { id: plant.id },
-        data: { sortName: sortName }
-      }
+        where: { id: plant.id },
+        data: { sortName: sortName },
+      };
       plantsToUpdate.push(prisma.plant.update(updateQuery));
     }
-
   }
 
   if (plantsToUpdate.length > 0) {
@@ -30,8 +29,8 @@ const main = async (): Promise<number> => {
   }
 
   return plantsToUpdate.length;
-}
+};
 
 main().then((res: number) => {
   console.log(`Updated plants: ${res}`);
-})
+});

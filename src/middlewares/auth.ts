@@ -7,64 +7,63 @@ import { LTRes } from '../helpers/ltres';
 declare global {
   namespace Express {
     type Auth = {
-      userId?: number
-    }
+      userId?: number;
+    };
 
     interface Request {
-      auth: Auth
+      auth: Auth;
     }
   }
 }
 
 export const generateAuth: RequestHandler = (req, res, next) => {
   req.auth = {};
-  req.auth.userId = (
-    req.body.userId ?
-    +req.body.userId :
-    (req.params.userId ?
-      +req.params.userId :
-      req.session.userId)
-  );
+
+  if (req.body.userId) req.auth.userId = +req.body.userId;
+  else if (req.params.userId) req.auth.userId = +req.params.userId;
+  else req.auth.userId = req.session.userId;
 
   next();
-}
+};
 
 // only allow if it's signed in, and if the data modifying is owned or if user's an admin
 export const self: RequestHandler = (req, res, next) => {
   if (!req.session.signedIn) return next(LTRes.createCode(401));
-  else if ((req.auth.userId !== req.session.userId) && (req.session.role !== Role.ADMIN)) {
+  else if (
+    req.auth.userId !== req.session.userId &&
+    req.session.role !== Role.ADMIN
+  ) {
     return next(LTRes.createCode(403));
   }
 
   next();
-}
+};
 
 export const admin: RequestHandler = (req, res, next) => {
-  if (!req.session.signedIn || (req.session.role !== Role.ADMIN)) {
+  if (!req.session.signedIn || req.session.role !== Role.ADMIN) {
     return next(LTRes.createCode(403));
   }
 
   next();
-}
+};
 
 export const signedIn: RequestHandler = (req, res, next) => {
   if (!req.session.signedIn) return next(LTRes.createCode(403));
 
   next();
-}
-
+};
 
 /**
  * Given a model name, returns the respective prisma delegate.
  * I really hate this, as it's extremely unscalable, but it works until
- * I find a workaround for TypeScript. 
+ * I find a workaround for TypeScript.
  * @param {string} model - The name of the model.
  * @returns {any} - The delegate object for the model.
  */
 export const getModelDelegate = (model: string): any => {
   let prismaDelegate;
 
-  switch(model) {
+  switch (model) {
     case 'user':
       prismaDelegate = prisma.user;
       break;
@@ -86,8 +85,7 @@ export const getModelDelegate = (model: string): any => {
   }
 
   return prismaDelegate;
-}
-
+};
 
 /**
  * Checks if the related object is owned by the same user.
@@ -101,18 +99,17 @@ export const checkRelationship = (model: string, idField: string) => {
     let id;
     const prismaDelegate = getModelDelegate(model);
 
-    if ((req.method === 'PUT') || (req.method === 'POST') && req.body[idField]) {
+    if (req.method === 'PUT' || (req.method === 'POST' && req.body[idField])) {
       id = +req.body[idField];
-    }
-    else if (req.params[idField]) id = +req.params[idField];
+    } else if (req.params[idField]) id = +req.params[idField];
 
     if (prismaDelegate && id) {
       try {
         await prismaDelegate.findFirstOrThrow({
           where: {
             id,
-            ownerId: req.auth.userId
-          }
+            ownerId: req.auth.userId,
+          },
         });
       } catch (err) {
         return next(LTRes.createCode(403));
@@ -120,12 +117,12 @@ export const checkRelationship = (model: string, idField: string) => {
     }
 
     next();
-  }
-}
+  };
+};
 
 /**
  * Checks if the user owns the item before updating it
- * @param {string} model 
+ * @param {string} model
  * @returns {function} - Express Middleware
  */
 export const checkOwnership = (model: string) => {
@@ -133,18 +130,17 @@ export const checkOwnership = (model: string) => {
     let id;
     const prismaDelegate = getModelDelegate(model);
 
-    if ((req.method === 'PUT') || (req.method === 'POST') && req.body.id) {
+    if (req.method === 'PUT' || (req.method === 'POST' && req.body.id)) {
       id = +req.body.id;
-    }
-    else id = +req.params.id;
+    } else id = +req.params.id;
 
     if (prismaDelegate && id) {
       try {
         await prismaDelegate.findFirstOrThrow({
           where: {
             id,
-            ownerId: req.auth.userId
-          }
+            ownerId: req.auth.userId,
+          },
         });
       } catch (err) {
         return next(LTRes.createCode(403));
@@ -152,13 +148,13 @@ export const checkOwnership = (model: string) => {
     }
 
     next();
-  }
-}
+  };
+};
 
 export default {
   self,
   admin,
   signedIn,
   checkRelationship,
-  checkOwnership
+  checkOwnership,
 };

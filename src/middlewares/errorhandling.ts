@@ -6,7 +6,7 @@ const defaultMessages: { [key: number]: string } = {
   401: 'UNAUTHENTICATED',
   403: 'UNAUTHORISED',
   500: 'SERVER_ERROR',
-}
+};
 
 const errorHandling: ErrorRequestHandler = async (err, req, res, next) => {
   if (process.env.NODE_ENV !== 'production') console.error(err);
@@ -26,15 +26,12 @@ const errorHandling: ErrorRequestHandler = async (err, req, res, next) => {
     if (error.code) {
       code = error.code;
       delete error.code;
-      
+
       if (!error.msg) error.msg = defaultMessages[code];
-    }
-    else code = 400;
+    } else code = 400;
 
     res.status(code).send(error);
-  }
-
-  else res.status(500).send();
-}
+  } else res.status(500).send();
+};
 
 export default errorHandling;
