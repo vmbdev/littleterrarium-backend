@@ -133,8 +133,8 @@ const find: RequestHandler = async (req, res, next) => {
 
   if (user) {
     if (
-      !req.params.username ||
       user.public ||
+      req.auth.userId === user.id ||
       req.session.role === Role.ADMIN
     ) {
       res.send(user);

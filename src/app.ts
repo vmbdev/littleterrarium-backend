@@ -1,4 +1,5 @@
 import { mkdirSync } from 'node:fs';
+import path from 'node:path';
 import express, { Express } from 'express';
 import 'express-async-errors';
 import cors from 'cors';
@@ -84,7 +85,7 @@ app.use(
 );
 app.use('/*', generateAuth, generateParser, generateDisk);
 app.use('/api', apiRoutes);
-app.use(files.folder.public, express.static('public'));
+app.use('/public', express.static(files.folder.public));
 enableAngularRouting(app, angular);
 app.use(errorHandling);
 

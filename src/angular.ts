@@ -11,9 +11,11 @@ type LanguageSet = {
 
 export const enableAngularRouting = async (
   app: Express,
-  settings: { buildOutput: string, defaultLang: string }
+  settings: { buildOutput: string; defaultLang: string }
 ) => {
-  const distPath = `${settings.buildOutput}/littleterrarium/browser`;
+  const distPath = path.resolve(
+    `${settings.buildOutput}/littleterrarium/browser`
+  );
   const languagesToSend: LanguageSet = { locales: [] };
   let distStat;
 

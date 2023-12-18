@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.5] - 2023-12-18
+
+### Fixes
+
+- Fixed the public folder not working when not set with default value.
+- Fixed an error in Angular routing when using relative paths for dist.
+- Fixed an error for which the user didn't have access to it's own Terrarium.
+
 ## [1.0.4] - 2023-12-15
 
 ### Added

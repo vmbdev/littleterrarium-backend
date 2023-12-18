@@ -1,6 +1,6 @@
 {
   "name": "littleterrarium-backend",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "type": "module",
   "scripts": {
     "start": "cross-env NODE_ENV=production tsc & node ./build/server.js",
