@@ -1,6 +1,6 @@
 import { ErrorRequestHandler } from 'express';
-import { LTRes } from '../helpers/ltres';
-import filesystem from '../helpers/filesystem';
+import { LTRes } from '../helpers/ltres.js';
+import filesystem from '../helpers/filesystem.js';
 
 const defaultMessages: { [key: number]: string } = {
   401: 'UNAUTHENTICATED',

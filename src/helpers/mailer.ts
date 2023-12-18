@@ -2,7 +2,7 @@ import nodemailer, { Transporter } from 'nodemailer';
 import SMTPPool from 'nodemailer/lib/smtp-pool';
 import Mail from 'nodemailer/lib/mailer';
 
-import { mailer as mailerConfig } from '../../littleterrarium.config';
+import { mailer as mailerConfig } from '../config/littleterrarium.config.js';
 
 export class Mailer {
   transport: Transporter;

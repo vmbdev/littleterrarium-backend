@@ -147,7 +147,7 @@ model Photo {
 model Specie {
   id          Int        @id @default(autoincrement()) 
   family      String
-  name        String
+  name        String     @unique
   commonName  String?
   care        Json?
   plants      Plant[]

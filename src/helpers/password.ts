@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { password as passwordConfig } from '../../littleterrarium.config';
+import { password as passwordConfig } from '../config/littleterrarium.config.js';
 
 export type PasswordCheckResult = {
   valid: boolean;

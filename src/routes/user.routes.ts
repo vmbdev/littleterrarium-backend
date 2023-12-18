@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import user from '../controllers/user.controller';
-import multerUploader from '../middlewares/uploader';
-import auth from '../middlewares/auth';
-import parser from '../middlewares/parser';
-import disk from '../middlewares/disk';
+import user from '../controllers/user.controller.js';
+import multerUploader from '../middlewares/uploader.js';
+import auth from '../middlewares/auth.js';
+import parser from '../middlewares/parser.js';
+import disk from '../middlewares/disk.js';
 
 const router = Router();
 const uploader = multerUploader();

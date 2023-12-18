@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import userRoutes from './user.routes';
-import locationRoutes from './location.routes';
-import plantRoutes from './plant.routes';
-import specieRoutes from './specie.routes';
-import photoRoutes from './photo.routes';
-import tasksRoutes from './tasks.routes';
+import userRoutes from './user.routes.js';
+import locationRoutes from './location.routes.js';
+import plantRoutes from './plant.routes.js';
+import specieRoutes from './specie.routes.js';
+import photoRoutes from './photo.routes.js';
+import tasksRoutes from './tasks.routes.js';
 
 const router = Router();
 

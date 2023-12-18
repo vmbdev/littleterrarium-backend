@@ -3,20 +3,23 @@ import express, { Express } from 'express';
 import 'express-async-errors';
 import cors from 'cors';
 import session from 'express-session';
-import { PrismaSessionStore } from '@quixo3/prisma-session-store/dist/index';
+import { PrismaSessionStore } from '@quixo3/prisma-session-store';
 import { Role } from '@prisma/client';
 
-import prisma from './prismainstance';
+import prisma from './prismainstance.js';
 
-import apiRoutes from './routes/api.routes';
-import { enableAngularRouting } from './angular';
-// import notifications from './helpers/notifications';
+import apiRoutes from './routes/api.routes.js';
+import { enableAngularRouting } from './angular.js';
 
-import errorHandling from './middlewares/errorhandling';
-import { generateAuth } from './middlewares/auth';
-import { generateParser } from './middlewares/parser';
-import { generateDisk } from './middlewares/disk';
-import { server as serverConfig } from '../littleterrarium.config';
+import errorHandling from './middlewares/errorhandling.js';
+import { generateAuth } from './middlewares/auth.js';
+import { generateParser } from './middlewares/parser.js';
+import { generateDisk } from './middlewares/disk.js';
+import {
+  server as serverConfig,
+  angular,
+  files,
+} from './config/littleterrarium.config.js';
 
 /**
  * Extend SessionData from express-session to include user info
@@ -81,12 +84,8 @@ app.use(
 );
 app.use('/*', generateAuth, generateParser, generateDisk);
 app.use('/api', apiRoutes);
-app.use('/public', express.static('public'));
-enableAngularRouting(app, serverConfig.angular.defaultLang);
+app.use(files.folder.public, express.static('public'));
+enableAngularRouting(app, angular);
 app.use(errorHandling);
-
-// setInterval(() => {
-//   notifications.check();
-// }, 60*60*1000);
 
 export default app;

@@ -1,11 +1,11 @@
 import type { RequestHandler } from 'express';
-import { Condition, Prisma } from '@prisma/client';
-import { LTRes } from '../helpers/ltres';
-import { removePhoto } from '../helpers/photomanager';
-import { prepareForSortName } from '../helpers/textparser';
-import prisma from '../prismainstance';
-import { plants as plantsConfig } from '../../littleterrarium.config';
 import dayjs from 'dayjs';
+import { Condition, Prisma } from '@prisma/client';
+import { LTRes } from '../helpers/ltres.js';
+import { removePhoto } from '../helpers/photomanager.js';
+import { prepareForSortName } from '../helpers/textparser.js';
+import prisma from '../prismainstance.js';
+import { plants as plantsConfig } from '../config/littleterrarium.config.js';
 
 const nextDate = (last: Date, freq: number): Date => {
   return dayjs(last).add(freq, 'days').toDate();

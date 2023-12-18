@@ -1,6 +1,6 @@
 import { RequestHandler } from 'express';
-import { LTRes } from '../helpers/ltres';
-import prisma from '../prismainstance';
+import { LTRes } from '../helpers/ltres.js';
+import prisma from '../prismainstance.js';
 
 const create: RequestHandler = async (req, res, next) => {
   const requiredFields = ['family', 'name'];

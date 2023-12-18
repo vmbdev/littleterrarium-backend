@@ -1,12 +1,8 @@
+import express, { Express } from 'express';
 import path from 'node:path';
 import { Dirent } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { stat, readdir } from 'node:fs/promises';
-import express, { Express } from 'express';
-import { LTRes } from './helpers/ltres';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { LTRes } from './helpers/ltres.js';
 
 type LanguageSet = {
   locales: string[];
@@ -15,10 +11,9 @@ type LanguageSet = {
 
 export const enableAngularRouting = async (
   app: Express,
-  defaultLanguage?: string
+  settings: { buildOutput: string, defaultLang: string }
 ) => {
-  // FIXME: allow a configurable/array of options
-  const distPath = path.join(__dirname, '../dist/littleterrarium/browser');
+  const distPath = `${settings.buildOutput}/littleterrarium/browser`;
   const languagesToSend: LanguageSet = { locales: [] };
   let distStat;
 
@@ -48,7 +43,7 @@ export const enableAngularRouting = async (
       await setAngularRoutes(app, '/', '*', distPath);
     } else {
       for (const language of languageList) {
-        if (language !== defaultLanguage) {
+        if (language !== settings.defaultLang) {
           const res = await setAngularRoutes(
             app,
             `/${language}`,
@@ -61,9 +56,9 @@ export const enableAngularRouting = async (
         }
       }
 
-      if (defaultLanguage) {
-        await setAngularRoutes(app, '/', '*', distPath, defaultLanguage);
-        languagesToSend.default = defaultLanguage;
+      if (settings.defaultLang) {
+        await setAngularRoutes(app, '/', '*', distPath, settings.defaultLang);
+        languagesToSend.default = settings.defaultLang;
       }
     }
   }

@@ -3,7 +3,8 @@ import { mkdir, readFile, unlink, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
-import { files } from '../../littleterrarium.config';
+
+import { files } from '../config/littleterrarium.config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

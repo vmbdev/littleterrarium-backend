@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.0.4] - 2023-12-15
+
+### Added
+
+- README file. About time.
+
+### Changes
+
+- Species database model now has the name as unique. Please migrate up your
+database.
+- Seeding scripts now uses World Flora Online files (bigger and newer).
+- Moved config files inside src directory to avoid the build creating a src
+directory.
+- Angular frontend path is now configurable.
+
+### Fixes
+
+- Build now properly emits JS files with the correct paths. Latest commit was
+not properly tested, sorry about that.
+
 ## [1.0.3] - 2023-12-06
 
 ### Changes
@@ -16,7 +36,7 @@
 
 - Code cleanup.
 
-### Fixed
+### Fixes
 
 - Parser now sets optional parameters as null when present but empty.
 

@@ -4,7 +4,7 @@ node_modules
 public
 temp
 prisma/migrations
-utils/res
+/utils/res/classification.csv
 dist
 .env
 littleterrarium.config.ts

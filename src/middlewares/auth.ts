@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import type { RequestHandler } from 'express';
 import { Role } from '@prisma/client';
-import prisma from '../prismainstance';
-import { LTRes } from '../helpers/ltres';
+
+import prisma from '../prismainstance.js';
+import { LTRes } from '../helpers/ltres.js';
 
 declare global {
   namespace Express {

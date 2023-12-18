@@ -2,8 +2,8 @@
  * Helper class for the models requiring photos (Plant, User, Location)
  */
 
-import prisma from '../prismainstance';
-import filesystem, { LocalFile } from './filesystem';
+import prisma from '../prismainstance.js';
+import filesystem, { LocalFile } from './filesystem.js';
 
 export const createPhoto = (data: any, file: LocalFile) => {
   const photoData = {

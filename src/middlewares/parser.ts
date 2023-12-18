@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { LTRes } from '../helpers/ltres';
+import { LTRes } from '../helpers/ltres.js';
 
 export interface ParserParameters {
   [key: string]: any;

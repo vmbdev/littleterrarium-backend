@@ -1,7 +1,7 @@
 import { RequestHandler } from 'express';
-import prisma from '../prismainstance';
-import { createPhoto, removePhoto } from '../helpers/photomanager';
-import { LTRes, NavigationData } from '../helpers/ltres';
+import prisma from '../prismainstance.js';
+import { createPhoto, removePhoto } from '../helpers/photomanager.js';
+import { LTRes, NavigationData } from '../helpers/ltres.js';
 import { Prisma } from '@prisma/client';
 
 const PhotoColumnSelection: Prisma.PhotoSelect = {

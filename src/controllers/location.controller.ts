@@ -1,9 +1,9 @@
 import { RequestHandler } from 'express';
 import { Prisma, Light, Plant } from '@prisma/client';
-import prisma from '../prismainstance';
-import { LTRes } from '../helpers/ltres';
-import { prepareForSortName } from '../helpers/textparser';
-import { plants as plantsConfig } from '../../littleterrarium.config';
+import prisma from '../prismainstance.js';
+import { LTRes } from '../helpers/ltres.js';
+import { prepareForSortName } from '../helpers/textparser.js';
+import { plants as plantsConfig } from '../config/littleterrarium.config.js';
 
 const create: RequestHandler = async (req, res, next) => {
   // public is not really optional, but it has a default value

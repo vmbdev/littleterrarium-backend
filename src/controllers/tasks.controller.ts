@@ -1,6 +1,6 @@
 import { RequestHandler } from 'express';
-import prisma from '../prismainstance';
 import dayjs from 'dayjs';
+import prisma from '../prismainstance.js';
 
 const find: RequestHandler = async (req, res, next) => {
   const tasks = await prisma.plant.findMany({

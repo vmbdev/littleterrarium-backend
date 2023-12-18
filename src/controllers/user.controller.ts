@@ -3,11 +3,11 @@ import { RequestHandler } from 'express';
 import dayjs from 'dayjs';
 
 import { User, Role, Prisma } from '@prisma/client';
-import prisma from '../prismainstance';
-import Password from '../helpers/password';
-import { LTRes } from '../helpers/ltres';
-import mailer from '../helpers/mailer';
-import { username as usernameConfig } from '../../littleterrarium.config';
+import prisma from '../prismainstance.js';
+import Password from '../helpers/password.js';
+import { LTRes } from '../helpers/ltres.js';
+import mailer from '../helpers/mailer.js';
+import { username as usernameConfig } from '../config/littleterrarium.config.js';
 
 const isEmailValid = (email: string): boolean => {
   return email.match(/^\S+@\S+\.\S+$/i) !== null;
