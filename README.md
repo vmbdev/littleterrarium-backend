@@ -1,6 +1,14 @@
 # Little Terrarium Backend Server
 
-Backend server for Little Terrarium made with Express in TypeScript.
+![Little Terrarium](https://littleterrarium.one/assets/oglt.png)
+
+**Little Terrarium** allows you to manage your whole plant collection.
+
+Little Terrarium Backend is made with Express.js, and is part of the Little
+Terrarium project.
+
+You can access the live app on
+[https://littleterrarium.one](https://littleterrarium.one).
 
 ## Getting Started
 
@@ -27,8 +35,8 @@ npm install
 
 ### Setup
 
-Then we'll need to configure the app. Rename
-**littleterrarium.config.example.js** to **littleterrarium.config.js** and edit
+Then we'll need to configure the app. Inside of **src/config**, rename
+**littleterrarium.config.example.ts** to **littleterrarium.config.ts** and edit
 it. Options are:
 
 - **server.port**: Port to listen to.
@@ -124,6 +132,8 @@ npm run dev
 ## Built with
 
 - [Node.js](https://nodejs.org/) - JavaScript runtime environment
+- [TypeScript](https://www.typescriptlang.org/) - JavaScript with syntax for
+types
 - [Prisma](https://www.prisma.io/) - ORM
 - [Express](https://expressjs.com/) - Web framework
 - [bcrypt](https://github.com/kelektiv/node.bcrypt.js) - A library to help you
