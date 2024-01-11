@@ -59,8 +59,18 @@ export const enableAngularRouting = async (
       }
 
       if (settings.defaultLang) {
-        await setAngularRoutes(app, '/', '*', distPath, settings.defaultLang);
-        languagesToSend.default = settings.defaultLang;
+        const res = await setAngularRoutes(
+          app,
+          '/',
+          '*',
+          distPath,
+          settings.defaultLang
+        );
+
+        if (res) {
+          languagesToSend.locales.unshift(settings.defaultLang);
+          languagesToSend.default = settings.defaultLang;
+        }
       }
     }
   }

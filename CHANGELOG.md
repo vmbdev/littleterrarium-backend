@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.6] - next
+
+### Changes
+
+- [Angular Integration] /angular/locales will now send all of the available
+languages on request, not removing the default one.
+
+### Fixes
+
+- Fixed a bug in which the start script will run in development mode.
+
 ## [1.0.5] - 2023-12-18
 
 ### Fixes
