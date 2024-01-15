@@ -10,6 +10,7 @@ languages on request, not removing the default one.
 ### Fixes
 
 - Fixed a bug in which the start script will run in development mode.
+- Fixed a bug in which plant/photos were sent in the wrong order.
 
 ## [1.0.5] - 2023-12-18
 

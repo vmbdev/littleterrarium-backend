@@ -402,7 +402,7 @@ const getPhotos: RequestHandler = async (req, res, next) => {
           plantId: true,
           takenAt: true,
         },
-        orderBy: [{ takenAt: 'asc' }, { id: 'desc' }],
+        orderBy: [{ takenAt: 'desc' }, { id: 'desc' }],
       };
 
       const photos = await prisma.photo.findMany(query);
