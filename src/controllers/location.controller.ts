@@ -80,6 +80,28 @@ const find: RequestHandler = async (req, res, next) => {
   res.send(locations);
 };
 
+const getPlantsCount: RequestHandler = async (req, res, next) => {
+  const location = await prisma.location.findUnique({
+    select: {
+      public: true,
+      ownerId: true,
+      _count: {
+        select: { plants: true },
+      },
+    },
+    where: { id: req.parser.id },
+  });
+
+  if (!location) return next(LTRes.createCode(404));
+  else {
+    if (!location.public && location.ownerId !== req.auth.userId) {
+      return next(LTRes.createCode(403));
+    } else {
+      res.send({ count: location._count.plants });
+    }
+  }
+}
+
 const findPlants: RequestHandler = async (req, res, next) => {
   const location = await prisma.location.findUnique({
     select: { public: true, ownerId: true },
@@ -241,6 +263,7 @@ export default {
   create,
   find,
   findPlants,
+  getPlantsCount,
   findOne,
   modify,
   remove,

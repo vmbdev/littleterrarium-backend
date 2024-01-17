@@ -19,6 +19,11 @@ router.get('/', auth.self, location.find);
 router.get('/user/:userId', parser.integers({ userId: true }), location.find);
 router.get('/:id', parser.integers({ id: true }), location.findOne);
 router.get('/:id/plants', parser.integers({ id: true }), location.findPlants);
+router.get(
+  '/:id/plants/count',
+  parser.integers({ id: true }),
+  location.getPlantsCount
+);
 router.put(
   '/',
   auth.self,

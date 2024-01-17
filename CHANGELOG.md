@@ -2,6 +2,11 @@
 
 ## [1.0.6] - next
 
+### Added
+
+- Location controllar can now send the number of plants in a location, without
+having to request the whole plant list. Ideally to calculate pagination.
+
 ### Changes
 
 - [Angular Integration] /angular/locales will now send all of the available
