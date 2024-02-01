@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import location from '../controllers/location.controller.js';
+import location from './location.controller.js';
 import multerUploader from '../middlewares/uploader.js';
 import auth from '../middlewares/auth.js';
 import disk from '../middlewares/disk.js';

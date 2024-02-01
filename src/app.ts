@@ -9,7 +9,7 @@ import { Role } from '@prisma/client';
 
 import prisma from './prismainstance.js';
 
-import apiRoutes from './routes/api.routes.js';
+import apiRoutes from './api.routes.js';
 import { enableAngularRouting } from './angular.js';
 
 import errorHandling from './middlewares/errorhandling.js';

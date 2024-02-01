@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import auth from '../middlewares/auth.js';
 import parser from '../middlewares/parser.js';
-import specie from '../controllers/specie.controller.js';
+import specie from './specie.controller.js';
 
 const router = Router();
 

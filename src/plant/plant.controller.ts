@@ -2,7 +2,7 @@ import type { RequestHandler } from 'express';
 import dayjs from 'dayjs';
 import { Condition, Prisma } from '@prisma/client';
 import { LTRes } from '../helpers/ltres.js';
-import { removePhoto } from '../helpers/photomanager.js';
+import { PhotoColumnSelection, removePhoto } from '../helpers/photomanager.js';
 import { prepareForSortName } from '../helpers/textparser.js';
 import prisma from '../prismainstance.js';
 import { plants as plantsConfig } from '../config/littleterrarium.config.js';
@@ -393,15 +393,7 @@ const getPhotos: RequestHandler = async (req, res, next) => {
         where: {
           plantId: req.parser.id,
         },
-        select: {
-          id: true,
-          images: true,
-          description: true,
-          public: true,
-          ownerId: true,
-          plantId: true,
-          takenAt: true,
-        },
+        select: PhotoColumnSelection,
         orderBy: [{ takenAt: 'desc' }, { id: 'desc' }],
       };
 

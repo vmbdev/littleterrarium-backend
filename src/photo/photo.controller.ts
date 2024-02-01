@@ -1,18 +1,8 @@
 import { RequestHandler } from 'express';
-import prisma from '../prismainstance.js';
-import { createPhoto, removePhoto } from '../helpers/photomanager.js';
-import { LTRes, NavigationData } from '../helpers/ltres.js';
 import { Prisma } from '@prisma/client';
-
-const PhotoColumnSelection: Prisma.PhotoSelect = {
-  id: true,
-  images: true,
-  description: true,
-  public: true,
-  ownerId: true,
-  plantId: true,
-  takenAt: true,
-};
+import prisma from '../prismainstance.js';
+import { PhotoColumnSelection, createPhoto, removePhoto } from '../helpers/photomanager.js';
+import { LTRes, NavigationData } from '../helpers/ltres.js';
 
 const create: RequestHandler = async (req, res, next) => {
   if (!req.disk.files || req.disk.files.length === 0) {

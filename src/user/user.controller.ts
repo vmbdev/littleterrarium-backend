@@ -81,7 +81,7 @@ const register: RequestHandler = async (req, res, next) => {
   if (req.disk.file) {
     data.avatar = {
       path: req.disk.file.path,
-      webp: req.disk.file.webp ? req.disk.file.webp : undefined,
+      webp: req.disk.file.webp ?? undefined,
     };
   }
 
@@ -226,7 +226,7 @@ const modify: RequestHandler = async (req, res, next) => {
   else if (req.disk.file) {
     data.avatar = {
       path: req.disk.file.path,
-      webp: req.disk.file.webp ? req.disk.file.webp : undefined,
+      webp: req.disk.file.webp ?? undefined,
     };
   }
 

@@ -4,8 +4,10 @@
 
 ### Added
 
+- Seeding database script that adds one admin user.
 - Location controllar can now send the number of plants in a location, without
 having to request the whole plant list. Ideally to calculate pagination.
+- API calls for administrators.
 
 ### Changes
 

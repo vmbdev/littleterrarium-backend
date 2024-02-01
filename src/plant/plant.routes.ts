@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import auth from '../middlewares/auth.js';
 import parser from '../middlewares/parser.js';
-import plant from '../controllers/plant.controller.js';
+import plant from './plant.controller.js';
 
 const router = Router();
 
