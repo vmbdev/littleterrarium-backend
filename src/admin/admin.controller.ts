@@ -1,8 +1,8 @@
 import { RequestHandler } from 'express';
 import { Prisma } from '@prisma/client';
 
-import prisma from 'src/prismainstance';
-import { PhotoColumnSelection } from 'src/helpers/photomanager';
+import prisma from '../prismainstance.js';
+import { PhotoColumnSelection } from '../helpers/photomanager.js';
 
 const summary: RequestHandler = async (req, res, next) => {
   const [users, locations, plants, photos, species] = await Promise.all([
@@ -17,7 +17,17 @@ const summary: RequestHandler = async (req, res, next) => {
 };
 
 const findAllUsers: RequestHandler = async (req, res, next) => {
-  const query: Prisma.UserFindManyArgs = {};
+  const query: Prisma.UserFindManyArgs = {
+    include: {
+      _count: {
+        select: {
+          plants: true,
+          locations: true,
+          photos: true,
+        }
+      }
+    },
+  };
 
   if (req.query.limit && +req.query.limit > 0) {
     query.take = +req.query.limit;

@@ -14,10 +14,8 @@ router.post(
   disk.image('avatar'),
   user.register
 );
-router.post('/validate/:key', user.verify);
 
-router.get('/', user.find);
-router.get('/id/:id?', parser.integers({ id: true }), user.findById);
+router.get('/id/:id?', parser.integers({ id: true }), user.find);
 router.put(
   '/',
   auth.self,
@@ -25,13 +23,7 @@ router.put(
   disk.image('avatar'),
   user.modify
 );
-router.delete('/:id', auth.admin, user.remove);
-router.post('/signin', user.signin);
-router.post('/logout', user.logout);
-
-router.post('/forgotten', user.forgottenPassword);
-router.post('/restore', user.restore);
-router.post('/verifytoken', user.verifyToken);
+router.delete('/:id', auth.admin, parser.integers({ id: true }), user.remove);
 
 router.get('/password/requirements', user.passwordRequirements);
 router.post('/password/check', user.checkPassword);

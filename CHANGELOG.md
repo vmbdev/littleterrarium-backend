@@ -8,6 +8,8 @@
 - Location controllar can now send the number of plants in a location, without
 having to request the whole plant list. Ideally to calculate pagination.
 - API calls for administrators.
+- Moved some User calls to a new Auth Controller/Router.
+- Cleanup of some code.
 
 ### Changes
 
