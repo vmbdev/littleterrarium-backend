@@ -150,8 +150,8 @@ types
 
 ## License
 
-fetch-reddit-media is licensed under the MIT License - see the
-[LICENSE](https://github.com/vmbdev/fetch-reddit-media/blob/main/LICENSE)
+Little Terrarium Backend is licensed under the MIT License - see the
+[LICENSE](https://github.com/vmbdev/littleterrarium-backend/blob/main/LICENSE)
 file for more details.
 
 ## Credits
