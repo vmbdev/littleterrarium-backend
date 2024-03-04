@@ -440,12 +440,19 @@ const remove: RequestHandler = async (req, res, next) => {
   } else next(LTRes.msg('PLANT_NOT_VALID'));
 };
 
+const getCount: RequestHandler = async (req, res, next) => {
+  const count = await prisma.plant.count();
+
+  res.send({ count });
+}
+
 export default {
   create,
   find,
   findOne,
   getPhotos,
   getCover,
+  getCount,
   modify,
   remove,
 };

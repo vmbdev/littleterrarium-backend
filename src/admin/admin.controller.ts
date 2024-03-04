@@ -33,9 +33,8 @@ const findAllUsers: RequestHandler = async (req, res, next) => {
     query.take = +req.query.limit;
   } else query.take = 20;
 
-  if (req.query.cursor && +req.query.cursor) {
-    query.cursor = { id: +req.query.cursor };
-    query.skip = 1;
+  if (req.query.skip && +req.query.skip) {
+    query.skip = +req.query.skip;
   }
 
   const users = await prisma.user.findMany(query);

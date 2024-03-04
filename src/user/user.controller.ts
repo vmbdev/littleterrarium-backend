@@ -134,12 +134,12 @@ const modify: RequestHandler = async (req, res, next) => {
 
   for (const requestedField of Object.keys(req.body)) {
     if (fields.includes(requestedField)) {
-      const isUsername =
+      const invalidUsername =
         requestedField === 'username' && !isUsernameValid(req.body.username);
-      const isEmail =
+      const invalidEmail =
         requestedField === 'email' && !isEmailValid(req.body.email);
 
-      if (isUsername || isEmail) {
+      if (invalidUsername || invalidEmail) {
         return next(LTRes.msg('USER_FIELD_INVALID').errorField(requestedField));
       } else if (requestedField === 'password') {
         const passwdCheck = Password.check(req.body.password);
