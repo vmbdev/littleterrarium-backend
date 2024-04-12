@@ -15,7 +15,7 @@ router.post(
   user.register
 );
 
-router.get('/id/:id?', parser.integers({ id: true }), user.find);
+router.get('/id/:id?', parser.number({ id: true }, 'params'), user.find);
 router.put(
   '/',
   auth.self,
@@ -23,7 +23,12 @@ router.put(
   disk.image('avatar'),
   user.modify
 );
-router.delete('/:id', auth.admin, parser.integers({ id: true }), user.remove);
+router.delete(
+  '/:id',
+  auth.admin,
+  parser.number({ id: true }, 'params'),
+  user.remove
+);
 
 router.get('/password/requirements', user.passwordRequirements);
 router.post('/password/check', user.checkPassword);

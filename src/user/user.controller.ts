@@ -11,6 +11,14 @@ import {
 } from '../helpers/user.js';
 import { username as usernameConfig } from '../config/littleterrarium.config.js';
 
+export interface UserPreferences {
+  [index: string]: any;
+  theme?: string;
+  locale?: string;
+  plantListSort?: 'name' | 'date';
+  plantListOrder?: 'asc' | 'desc';
+}
+
 const register: RequestHandler = async (req, res, next) => {
   const requiredFields = ['username', 'password', 'email'];
   const optionalFields = [
@@ -18,7 +26,6 @@ const register: RequestHandler = async (req, res, next) => {
     'lastname',
     'public',
     'bio',
-    'preferences',
   ];
   const data: any = {};
 
@@ -127,21 +134,27 @@ const modify: RequestHandler = async (req, res, next) => {
     'role',
     'public',
     'bio',
-    'avatar',
+    'removeAvatar',
+    'avatarFile',
     'preferences',
   ];
   const data: any = {};
 
-  for (const requestedField of Object.keys(req.body)) {
-    if (fields.includes(requestedField)) {
-      const invalidUsername =
-        requestedField === 'username' && !isUsernameValid(req.body.username);
-      const invalidEmail =
-        requestedField === 'email' && !isEmailValid(req.body.email);
+  for (const field of fields) {
+    if (!req.body[field]) continue;
 
-      if (invalidUsername || invalidEmail) {
-        return next(LTRes.msg('USER_FIELD_INVALID').errorField(requestedField));
-      } else if (requestedField === 'password') {
+    // check for username and email validity
+    const invalidUsername =
+      field === 'username' && !isUsernameValid(req.body.username);
+    const invalidEmail =
+      field === 'email' && !isEmailValid(req.body.email);
+
+    if (invalidUsername || invalidEmail) {
+      return next(LTRes.msg('USER_FIELD_INVALID').errorField(field));
+    }
+
+    switch (field) {
+      case 'password': {
         const passwdCheck = Password.check(req.body.password);
 
         if (passwdCheck.valid) {
@@ -151,22 +164,51 @@ const modify: RequestHandler = async (req, res, next) => {
             LTRes.msg('USER_PASSWD_INVALID').errorComp(passwdCheck.comp)
           );
         }
-      } else if (requestedField === 'role') {
-        if (
-          req.session.role === Role.ADMIN &&
-          Role.hasOwnProperty(req.body.role)
-        ) {
+
+        break;
+      }
+
+      case 'role': {
+        if (req.session.role === Role.ADMIN && req.body.role in Role) {
           data.role = req.body.role;
         } else return next(LTRes.createCode(403));
-      } else if (requestedField === 'public') {
+
+        break;
+      }
+
+      case 'public': {
         data.public = req.body.public === true || req.body.public === 'true';
-      } else data[requestedField] = req.body[requestedField];
+        break;
+      }
+
+      case 'preferences': {
+        // avoid adding possible malicious extra information
+        const tempPrefs = JSON.parse(req.body.preferences);
+
+        data.preferences = {
+          theme: tempPrefs.theme,
+          locale: tempPrefs.locale,
+          plantListSort: tempPrefs.plantListSort,
+          plantListOrder: tempPrefs.plantListOrder,
+        }
+
+        break;
+      }
+
+      case 'removeAvatar': {
+        data.avatar = Prisma.JsonNull;
+
+        break;
+      }
+
+      default: {
+        data[field] = req.body[field];
+      }
     }
   }
 
-  // picture
-  if (req.body.removeAvatar) data.avatar = Prisma.JsonNull;
-  else if (req.disk.file) {
+  // Avatar upload, managed by uploader middleware
+  if (!req.body.removeAvatar && req.disk.file) {
     data.avatar = {
       path: req.disk.file.path,
       webp: req.disk.file.webp ?? undefined,

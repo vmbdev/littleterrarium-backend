@@ -12,15 +12,15 @@ router.post(
   '/',
   auth.self,
   uploader.array('photo', 10),
-  parser.integers({ plantId: true }),
+  parser.number({ plantId: true }, 'body'),
   auth.checkRelationship('plant', 'plantId'),
   disk.gallery(),
   photo.create
 );
-router.get('/:id', parser.integers({ id: true }), photo.findOne);
+router.get('/:id', parser.number({ id: true }, 'params'), photo.findOne);
 router.get(
   '/:id/navigation',
-  parser.integers({ id: true }),
+  parser.number({ id: true }, 'params'),
   photo.getNavigation
 );
 router.put(
@@ -28,14 +28,14 @@ router.put(
   auth.self,
   auth.checkOwnership('photo'),
   auth.checkRelationship('plant', 'plantId'),
-  parser.integers({ id: true }),
+  parser.number({ id: true }, 'body'),
   photo.modify
 );
 router.delete(
   '/:id',
   auth.self,
   auth.checkOwnership('photo'),
-  parser.integers({ id: true }),
+  parser.number({ id: true }, 'params'),
   photo.remove
 );
 

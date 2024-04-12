@@ -10,12 +10,15 @@ having to request the whole plant list. Ideally to calculate pagination.
 - API calls for administrators.
 - API call to receive the amount of plants of the user.
 - Moved some User calls to a new Auth Controller/Router.
-- Cleanup of some code.
 
 ### Changes
 
 - [Angular Integration] /angular/locales will now send all of the available
 languages on request, not removing the default one.
+- Support for mass actions on some models.
+- Parser can now parse parameters with multiple numbers (1;2;3;4).
+- Cleanup of some code.
+- Improved parsing security.
 
 ### Fixes
 

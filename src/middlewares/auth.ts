@@ -1,9 +1,9 @@
-import { Request, Response, NextFunction } from 'express';
-import type { RequestHandler } from 'express';
+import { type RequestHandler, Request, Response, NextFunction } from 'express';
 import { Role } from '@prisma/client';
 
 import prisma from '../prismainstance.js';
 import { LTRes } from '../helpers/ltres.js';
+import { stringQueryToNumbers } from '../helpers/textparser.js';
 
 declare global {
   namespace Express {
@@ -18,11 +18,9 @@ declare global {
 }
 
 export const generateAuth: RequestHandler = (req, res, next) => {
-  req.auth = {};
-
-  if (req.body.userId) req.auth.userId = +req.body.userId;
-  else if (req.params.userId) req.auth.userId = +req.params.userId;
-  else req.auth.userId = req.session.userId;
+  req.auth = {
+    userId: req.session.userId,
+  };
 
   next();
 };
@@ -31,7 +29,8 @@ export const generateAuth: RequestHandler = (req, res, next) => {
 export const self: RequestHandler = (req, res, next) => {
   if (!req.session.signedIn) return next(LTRes.createCode(401));
   else if (
-    req.auth.userId !== req.session.userId &&
+    +req.params.userId !== req.session.userId &&
+    +req.body.userId !== req.session.userId &&
     req.session.role !== Role.ADMIN
   ) {
     return next(LTRes.createCode(403));
@@ -124,25 +123,33 @@ export const checkRelationship = (model: string, idField: string) => {
 /**
  * Checks if the user owns the item before updating it
  * @param {string} model
+ * @param {boolean} mass Whether it's receiving multiple ids in a string
  * @returns {function} - Express Middleware
  */
-export const checkOwnership = (model: string) => {
+export const checkOwnership = (model: string, mass: boolean = false) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    let id;
+    let ids;
     const prismaDelegate = getModelDelegate(model);
 
-    if (req.method === 'PUT' || (req.method === 'POST' && req.body.id)) {
-      id = +req.body.id;
-    } else id = +req.params.id;
+    if (mass) {
+      ids = stringQueryToNumbers(req.params.id);
+    } else {
+      if (req.method === 'PUT' || (req.method === 'POST' && req.body.id)) {
+        ids = [+req.body.id];
+      } else ids = [+req.params.id];
+    }
 
-    if (prismaDelegate && id) {
+    if (prismaDelegate && ids) {
       try {
-        await prismaDelegate.findFirstOrThrow({
-          where: {
-            id,
-            ownerId: req.auth.userId,
-          },
-        });
+        for (const id of ids) {
+          // TODO: check ownership so that it passes when non-existant
+          await prismaDelegate.findFirstOrThrow({
+            where: {
+              id,
+              ownerId: req.auth.userId,
+            },
+          });
+        }
       } catch (err) {
         return next(LTRes.createCode(403));
       }

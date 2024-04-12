@@ -1,10 +1,11 @@
 import type { RequestHandler } from 'express';
 import dayjs from 'dayjs';
 import { Condition, Prisma } from '@prisma/client';
+
+import prisma from '../prismainstance.js';
 import { LTRes } from '../helpers/ltres.js';
 import { PhotoColumnSelection, removePhoto } from '../helpers/photomanager.js';
 import { prepareForSortName } from '../helpers/textparser.js';
-import prisma from '../prismainstance.js';
 import { plants as plantsConfig } from '../config/littleterrarium.config.js';
 
 const nextDate = (last: Date, freq: number): Date => {
@@ -62,7 +63,9 @@ const create: RequestHandler = async (req, res, next) => {
         case 'waterLast':
         case 'fertLast': {
           const date = new Date(req.body[field]);
-          data[field] = date;
+
+          if (date.valueOf()) data[field] = date;
+
           break;
         }
         case 'public': {
@@ -280,12 +283,9 @@ const modify: RequestHandler = async (req, res, next) => {
         }
         case 'waterLast':
         case 'fertLast': {
-          const lastField = req.body[field];
+          const date = new Date(req.body[field]);
 
-          if (lastField) {
-            const date = new Date(lastField);
-            data[field] = date;
-          } else data[field] = null;
+          if (date.valueOf()) data[field] = date;
 
           break;
         }
@@ -313,7 +313,6 @@ const modify: RequestHandler = async (req, res, next) => {
         id: req.parser.id,
         ownerId: req.auth.userId,
       },
-      // TODO: make it optional?
       include: {
         cover: true,
         specie: true,
@@ -420,24 +419,49 @@ const getCover: RequestHandler = async (req, res, next) => {
 };
 
 /**
- * Remove a Plant object by its id.
+ * Remove one or many Plants by its ids.
  */
 const remove: RequestHandler = async (req, res, next) => {
-  const plant = await prisma.plant.delete({
-    where: {
-      id: req.parser.id,
-      ownerId: req.auth.userId,
-    },
-    include: { photos: true },
-  });
+  const ids = req.parser.id;
+  const proms = [];
 
-  if (plant) {
-    // update references of the hashes of the photos
+  if (ids.length > plantsConfig.maxForMassAction) {
+    return next(
+      LTRes.msg('PLANT_MAX_EXCEEDED').errorValues(plantsConfig.maxForMassAction)
+    );
+  }
+
+  // we need the photos to update their hash, so we can't use deleteMany
+  for (const id of ids) {
+    proms.push(
+      prisma.plant.delete({
+        where: {
+          id,
+          ownerId: req.auth.userId,
+        },
+        include: { photos: true },
+      })
+    );
+  }
+
+  const plants = (await Promise.allSettled(proms))
+    .reduce((res: any[], prom) => {
+      if (prom.status === 'fulfilled') res.push(prom.value);
+      return res;
+    }, []);
+
+  if (plants.length === 0) {
+    return next(LTRes.msg('PLANT_NOT_VALID'));
+  }
+
+  // update references of the hashes of the photos
+  for (const plant of plants) {
     for (const photo of plant.photos) {
-      removePhoto(photo.id, req.auth.userId);
+      await removePhoto(photo.id, req.auth.userId);
     }
-    res.send(LTRes.createCode(204));
-  } else next(LTRes.msg('PLANT_NOT_VALID'));
+  }
+
+  res.send(LTRes.createCode(204));
 };
 
 const getCount: RequestHandler = async (req, res, next) => {

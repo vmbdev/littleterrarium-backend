@@ -20,7 +20,9 @@ const create: RequestHandler = async (req, res, next) => {
       if (field === 'public') {
         data.public = req.body.public === true || req.body.public === 'true';
       } else if (field === 'takenAt') {
-        data.takenAt = new Date(req.body.takenAt);
+        const date = new Date(req.body.takenAt);
+
+        if (date.valueOf()) data.takenAt = date;
       } else data[field] = req.body[field];
     }
   }
@@ -95,7 +97,11 @@ const modify: RequestHandler = async (req, res, next) => {
   const fields = ['description', 'takenAt', 'public'];
 
   for (const field of fields) {
-    if (field === 'takenAt') data.takenAt = new Date(req.body.takenAt);
+    if (field === 'takenAt') {
+      const date = new Date(req.body.takenAt);
+
+      if (date.valueOf()) data.takenAt = date;
+    }
     else if (field === 'public') {
       data.public = req.body.public === true || req.body.public === 'true';
     } else data[field] = req.body[field];

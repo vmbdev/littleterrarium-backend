@@ -1,4 +1,5 @@
 import { Router } from 'express';
+
 import userRoutes from './user/user.routes.js';
 import authRoutes from './auth/auth.routes.js';
 import locationRoutes from './location/location.routes.js';

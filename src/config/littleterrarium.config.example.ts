@@ -15,7 +15,8 @@ export const server = {
 }
 
 export const plants = {
-  number: 20
+  number: 20,
+  maxForMassAction: 20,
 }
 
 export const files = {

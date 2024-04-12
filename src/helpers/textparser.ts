@@ -6,6 +6,20 @@ export const prepareForSortName = (val: string) => {
   return removeAccents(val.toLowerCase());
 };
 
+/**
+ * 
+ * @param {string} str String of numbers formatted such as '1;2;3;4'
+ * @returns {number[]} Array of numbers
+ */
+export const stringQueryToNumbers = (str: string): number[] => {
+  return str.split(';').reduce((def: number[], i) => {
+    const ni = +i;
+    if (ni) def.push(ni);
+    return def;
+  }, []);
+}
+
 export default {
   removeAccents,
+  stringQueryToNumbers,
 };

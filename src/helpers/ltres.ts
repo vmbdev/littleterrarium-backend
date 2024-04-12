@@ -38,7 +38,7 @@ export class LTRes {
   };
   errorData?: {
     field?: string;
-    values?: any[];
+    values?: any;
     comp?: any;
   };
 
@@ -165,7 +165,7 @@ export class LTRes {
     return this;
   }
 
-  errorValues(values: any[]) {
+  errorValues(values: any) {
     if (!this.errorData) this.errorData = {};
 
     this.errorData.values = values;

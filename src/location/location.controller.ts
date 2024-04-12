@@ -195,7 +195,7 @@ const findOne: RequestHandler = async (req, res, next) => {
   if (location) {
     if (location.ownerId === req.auth.userId) res.send(location);
     // if requesting user is not the owner, send only if it's public
-    else if (location.ownerId !== req.auth.userId && location.public) {
+    else if (location.public) {
       // extremely inelegant, but Prisma doesn't add relations to interfaces
       // so we can't access location.plants
       const locationWithPublicPlants = location as any;

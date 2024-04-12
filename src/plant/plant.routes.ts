@@ -8,44 +8,58 @@ const router = Router();
 router.post(
   '/',
   auth.self,
-  parser.integers({
-    locationId: true,
-    specieId: false,
-    waterFreq: false,
-    fertFreq: false,
-    potSize: false,
-  }),
+  parser.number(
+    {
+      locationId: true,
+      specieId: false,
+      waterFreq: false,
+      fertFreq: false,
+      potSize: false,
+    },
+    'body'
+  ),
   auth.checkRelationship('location', 'locationId'),
   plant.create
 );
 router.get('/', auth.self, plant.find);
-router.get('/user/:userId', parser.integers({ userId: true }), plant.find);
+router.get(
+  '/user/:userId',
+  parser.number({ userId: true }, 'params'),
+  plant.find
+);
 router.get('/count', plant.getCount);
-router.get('/:id', parser.integers({ id: false }), plant.findOne);
-router.get('/:id/photos', parser.integers({ id: true }), plant.getPhotos);
-router.get('/:id/cover', parser.integers({ id: true }), plant.getCover);
+router.get('/:id', parser.number({ id: false }, 'params'), plant.findOne);
+router.get(
+  '/:id/photos',
+  parser.number({ id: true }, 'params'),
+  plant.getPhotos
+);
+router.get('/:id/cover', parser.number({ id: true }, 'params'), plant.getCover);
 router.put(
   '/',
   auth.self,
   auth.checkOwnership('plant'),
   auth.checkRelationship('location', 'locationId'),
   auth.checkRelationship('photo', 'coverId'),
-  parser.integers({
-    id: true,
-    locationId: false,
-    specieId: false,
-    coverId: false,
-    waterFreq: false,
-    fertFreq: false,
-    potSize: false,
-  }),
+  parser.number(
+    {
+      id: true,
+      locationId: false,
+      specieId: false,
+      coverId: false,
+      waterFreq: false,
+      fertFreq: false,
+      potSize: false,
+    },
+    'body'
+  ),
   plant.modify
 );
 router.delete(
   '/:id',
   auth.self,
-  auth.checkOwnership('plant'),
-  parser.integers({ id: true }),
+  auth.checkOwnership('plant', true),
+  parser.numbers({ id: true }, 'params'),
   plant.remove
 );
 
