@@ -17,6 +17,10 @@ having to request the whole plant list. Ideally to calculate pagination.
 languages on request, not removing the default one.
 - Support for mass actions on some models.
 - Parser can now parse parameters with multiple numbers (1;2;3;4).
+- Auth ownership controller will now pass if the model is not found.
+- Separation of concerns between the controller and the model, now implemented
+as a Prisma extension.
+- Updated HTTP requests to properly match the methods.
 - Cleanup of some code.
 - Improved parsing security.
 

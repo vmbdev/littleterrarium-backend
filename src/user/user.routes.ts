@@ -16,7 +16,7 @@ router.post(
 );
 
 router.get('/id/:id?', parser.number({ id: true }, 'params'), user.find);
-router.put(
+router.patch(
   '/',
   auth.self,
   uploader.single('avatar'),

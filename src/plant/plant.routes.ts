@@ -35,7 +35,7 @@ router.get(
   plant.getPhotos
 );
 router.get('/:id/cover', parser.number({ id: true }, 'params'), plant.getCover);
-router.put(
+router.patch(
   '/',
   auth.self,
   auth.checkOwnership('plant'),

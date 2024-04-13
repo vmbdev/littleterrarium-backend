@@ -1,5 +1,6 @@
 import { type RequestHandler, Request, Response, NextFunction } from 'express';
 import { Role } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library.js';
 
 import prisma from '../prismainstance.js';
 import { LTRes } from '../helpers/ltres.js';
@@ -18,6 +19,8 @@ declare global {
 }
 
 export const generateAuth: RequestHandler = (req, res, next) => {
+  // this object made much more sense before, but we're keeping it up for
+  // compatibility
   req.auth = {
     userId: req.session.userId,
   };
@@ -25,14 +28,13 @@ export const generateAuth: RequestHandler = (req, res, next) => {
   next();
 };
 
-// only allow if it's signed in, and if the data modifying is owned or if user's an admin
+// only allow if it's signed in, and if the destined userId is the owner or if
+// user's an admin
 export const self: RequestHandler = (req, res, next) => {
   if (!req.session.signedIn) return next(LTRes.createCode(401));
-  else if (
-    +req.params.userId !== req.session.userId &&
-    +req.body.userId !== req.session.userId &&
-    req.session.role !== Role.ADMIN
-  ) {
+  const userId = +req.params.userId ?? +req.body.userId;
+
+  if (userId && userId !== req.auth.userId && req.session.role !== Role.ADMIN) {
     return next(LTRes.createCode(403));
   }
 
@@ -99,7 +101,10 @@ export const checkRelationship = (model: string, idField: string) => {
     let id;
     const prismaDelegate = getModelDelegate(model);
 
-    if (req.method === 'PUT' || (req.method === 'POST' && req.body[idField])) {
+    if (
+      req.method === 'PATCH' ||
+      (req.method === 'POST' && req.body[idField])
+    ) {
       id = +req.body[idField];
     } else if (req.params[idField]) id = +req.params[idField];
 
@@ -133,25 +138,32 @@ export const checkOwnership = (model: string, mass: boolean = false) => {
 
     if (mass) {
       ids = stringQueryToNumbers(req.params.id);
-    } else {
-      if (req.method === 'PUT' || (req.method === 'POST' && req.body.id)) {
-        ids = [+req.body.id];
-      } else ids = [+req.params.id];
-    }
+    } else if (
+      req.method === 'PATCH' ||
+      (req.method === 'POST' && req.body.id)
+    ) {
+      ids = [+req.body.id];
+    } else ids = [+req.params.id];
 
     if (prismaDelegate && ids) {
       try {
         for (const id of ids) {
-          // TODO: check ownership so that it passes when non-existant
-          await prismaDelegate.findFirstOrThrow({
-            where: {
-              id,
-              ownerId: req.auth.userId,
-            },
-          });
+          const el = await prismaDelegate.findFirstOrThrow({ where: { id } });
+
+          // item exists but is not owned by the requesting user
+          if (el.ownerId && el.ownerId !== req.auth.userId) {
+            return next(LTRes.createCode(403));
+          }
         }
-      } catch (err) {
-        return next(LTRes.createCode(403));
+      } catch (err: unknown) {
+        if (
+          err instanceof PrismaClientKnownRequestError &&
+          err.code === 'P2025'
+        ) {
+          // if the item isn't found then it's some other controller problem,
+          // we call next anyway
+          return next();
+        } else return next(LTRes.createCode(500));
       }
     }
 

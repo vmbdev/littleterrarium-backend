@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 
+import { plantExtension } from './plant/plant.model';
+
 const prisma = new PrismaClient({
   log: [
     // 'query',
@@ -7,6 +9,8 @@ const prisma = new PrismaClient({
     'warn',
     'error',
   ],
-});
+})
 
-export default prisma;
+const prismaExtended = prisma.$extends(plantExtension);
+
+export default prismaExtended;

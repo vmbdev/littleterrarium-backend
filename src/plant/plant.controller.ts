@@ -1,16 +1,11 @@
 import type { RequestHandler } from 'express';
-import dayjs from 'dayjs';
 import { Condition, Prisma } from '@prisma/client';
 
 import prisma from '../prismainstance.js';
 import { LTRes } from '../helpers/ltres.js';
-import { PhotoColumnSelection, removePhoto } from '../helpers/photomanager.js';
+import { PhotoColumnSelection } from '../helpers/photomanager.js';
 import { prepareForSortName } from '../helpers/textparser.js';
 import { plants as plantsConfig } from '../config/littleterrarium.config.js';
-
-const nextDate = (last: Date, freq: number): Date => {
-  return dayjs(last).add(freq, 'days').toDate();
-};
 
 /**
  * Express Middleware that creates a Plant object in the database.
@@ -86,37 +81,10 @@ const create: RequestHandler = async (req, res, next) => {
     }
   }
 
-  // if water/fertiliser frequencies and last times are given,
-  // calculate the next time it must be done
-  if (
-    req.parser.waterFreq &&
-    req.body.waterLast &&
-    dayjs(req.parser.waterLast).isValid() &&
-    +req.body.waterFreq
-  ) {
-    data.waterNext = nextDate(req.body.waterLast, req.parser.waterFreq);
-  }
-  if (
-    req.parser.fertFreq &&
-    req.body.fertLast &&
-    dayjs(req.parser.fertLast).isValid() &&
-    +req.body.fertFreq
-  ) {
-    data.fertNext = nextDate(req.body.fertLast, req.parser.fertFreq);
-  }
-
   data.ownerId = req.auth.userId;
 
   try {
-    if (!data.customName && data.specieId) {
-      const specie = await prisma.specie.findUnique({
-        where: { id: data.specieId },
-      });
-
-      data.sortName = specie?.name;
-    }
-
-    const plant = await prisma.plant.create({ data });
+    const plant = await prisma.plant.ltCreate(data);
 
     res.send(plant);
   } catch (err) {
@@ -308,68 +276,11 @@ const modify: RequestHandler = async (req, res, next) => {
   }
 
   try {
-    let plant = await prisma.plant.update({
-      where: {
-        id: req.parser.id,
-        ownerId: req.auth.userId,
-      },
-      include: {
-        cover: true,
-        specie: true,
-      },
+    const plant = await prisma.plant.ltUpdate(
       data,
-    });
-
-    const plantUpdatedData: any = {};
-
-    /**
-     * We define here the internal property sortName.
-     * It's used exclusively internally to sort the plants.
-     * The requirement for this is because the plant can be named by the user
-     * (customName) or by the specie (specie.name), and we can't sort it by
-     * both columns simultaneously (just by one and then another).
-     */
-    if (!plant.customName) {
-      if (plant.specieId) {
-        const specie = await prisma.specie.findUnique({
-          where: { id: plant.specieId },
-        });
-
-        plantUpdatedData.sortName = specie?.name;
-      } else plantUpdatedData.sortName = null;
-    }
-
-    /**
-     * Check if the object has both frequency and last time for both water and
-     * fertlizer. If so, updates the waterNext/waterFreq property.
-     * This is tricky, as it requires an update from the object that has been
-     * just updated, but it's needed as only one property may have been updated
-     * and thus received by the user (i.e. waterFreq but no waterLast).
-     * In an environment with a specied database that supports both triggers
-     * and date operations, it can be done with such trigger.
-     * */
-
-    if (plant.waterFreq && plant.waterLast) {
-      plantUpdatedData.waterNext = nextDate(plant.waterLast, plant.waterFreq);
-    } else plantUpdatedData.waterNext = null;
-
-    if (plant.fertFreq && plant.fertLast) {
-      plantUpdatedData.fertNext = nextDate(plant.fertLast, plant.fertFreq);
-    } else plantUpdatedData.fertNext = null;
-
-    if (Object.keys(plantUpdatedData).length > 0) {
-      plant = await prisma.plant.update({
-        where: {
-          id: req.parser.id,
-          ownerId: req.auth.userId,
-        },
-        include: {
-          cover: true,
-          specie: true,
-        },
-        data: plantUpdatedData,
-      });
-    }
+      req.parser.id,
+      req.auth.userId! // FIXME: take care of !
+    );
 
     res.send(plant);
   } catch (err) {
@@ -405,10 +316,7 @@ const getPhotos: RequestHandler = async (req, res, next) => {
 
 const getCover: RequestHandler = async (req, res, next) => {
   if (req.parser.id) {
-    const plant = await prisma.plant.findUnique({
-      select: { coverId: true, ownerId: true, public: true },
-      where: { id: req.parser.id },
-    });
+    const plant = await prisma.plant.getCoverId(req.parser.id);
 
     if (plant) {
       if (plant.ownerId === req.auth.userId || plant.public) {
@@ -423,7 +331,6 @@ const getCover: RequestHandler = async (req, res, next) => {
  */
 const remove: RequestHandler = async (req, res, next) => {
   const ids = req.parser.id;
-  const proms = [];
 
   if (ids.length > plantsConfig.maxForMassAction) {
     return next(
@@ -431,44 +338,18 @@ const remove: RequestHandler = async (req, res, next) => {
     );
   }
 
-  // we need the photos to update their hash, so we can't use deleteMany
-  for (const id of ids) {
-    proms.push(
-      prisma.plant.delete({
-        where: {
-          id,
-          ownerId: req.auth.userId,
-        },
-        include: { photos: true },
-      })
-    );
-  }
+  // FIXME !
+  const deleted = await prisma.plant.ltRemove(ids, req.auth.userId!);
 
-  const plants = (await Promise.allSettled(proms))
-    .reduce((res: any[], prom) => {
-      if (prom.status === 'fulfilled') res.push(prom.value);
-      return res;
-    }, []);
-
-  if (plants.length === 0) {
-    return next(LTRes.msg('PLANT_NOT_VALID'));
-  }
-
-  // update references of the hashes of the photos
-  for (const plant of plants) {
-    for (const photo of plant.photos) {
-      await removePhoto(photo.id, req.auth.userId);
-    }
-  }
-
-  res.send(LTRes.createCode(204));
+  if (deleted === 0) return next(LTRes.msg('PLANT_NOT_VALID'));
+  else res.send(LTRes.createCode(204));
 };
 
 const getCount: RequestHandler = async (req, res, next) => {
   const count = await prisma.plant.count();
 
   res.send({ count });
-}
+};
 
 export default {
   create,

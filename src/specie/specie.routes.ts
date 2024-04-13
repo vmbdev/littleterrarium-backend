@@ -13,7 +13,7 @@ router.get(
   parser.number({ id: true }, 'params'),
   specie.findOne
 );
-router.put('/', auth.admin, parser.number({ id: true }, 'body'), specie.modify);
+router.patch('/', auth.admin, parser.number({ id: true }, 'body'), specie.modify);
 router.delete(
   '/:id',
   auth.admin,

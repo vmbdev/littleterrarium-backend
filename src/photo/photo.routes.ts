@@ -23,7 +23,7 @@ router.get(
   parser.number({ id: true }, 'params'),
   photo.getNavigation
 );
-router.put(
+router.patch(
   '/',
   auth.self,
   auth.checkOwnership('photo'),

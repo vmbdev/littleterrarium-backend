@@ -33,7 +33,7 @@ router.get(
   parser.number({ id: true }, 'params'),
   location.getPlantsCount
 );
-router.put(
+router.patch(
   '/',
   auth.self,
   uploader.single('picture'),
