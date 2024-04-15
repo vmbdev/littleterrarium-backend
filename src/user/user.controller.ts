@@ -1,7 +1,7 @@
 import { RequestHandler } from 'express';
 import { Role, Prisma } from '@prisma/client';
 
-import prisma from '../prismainstance.js';
+import prisma from '../prisma.js';
 import Password from '../helpers/password.js';
 import { LTRes } from '../helpers/ltres.js';
 import {

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 
 import { LTRes } from '../helpers/ltres.js';
-import { stringQueryToNumbers } from '../helpers/textparser.js';
+import { stringQueryToNumbers } from '../helpers/dataparser.js';
 
 export interface ParserParameters {
   [key: string]: any;

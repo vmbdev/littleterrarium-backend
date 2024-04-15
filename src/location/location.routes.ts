@@ -26,6 +26,7 @@ router.get('/:id', parser.number({ id: true }, 'params'), location.findOne);
 router.get(
   '/:id/plants',
   parser.number({ id: true }, 'params'),
+  parser.number({ cursor: false, limit: false }, 'query'),
   location.findPlants
 );
 router.get(

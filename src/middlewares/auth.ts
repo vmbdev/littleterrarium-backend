@@ -2,9 +2,9 @@ import { type RequestHandler, Request, Response, NextFunction } from 'express';
 import { Role } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library.js';
 
-import prisma from '../prismainstance.js';
+import prisma from '../prisma.js';
 import { LTRes } from '../helpers/ltres.js';
-import { stringQueryToNumbers } from '../helpers/textparser.js';
+import { stringQueryToNumbers } from '../helpers/dataparser.js';
 
 declare global {
   namespace Express {

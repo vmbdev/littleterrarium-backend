@@ -1,8 +1,9 @@
 import { RequestHandler } from 'express';
 import { Prisma } from '@prisma/client';
-import prisma from '../prismainstance.js';
-import { PhotoColumnSelection, createPhoto, removePhoto } from '../helpers/photomanager.js';
-import { LTRes, NavigationData } from '../helpers/ltres.js';
+
+import prisma from '../prisma.js';
+import { LTRes } from '../helpers/ltres.js';
+import { PhotoColumnSelection } from './photo.extension.js';
 
 const create: RequestHandler = async (req, res, next) => {
   if (!req.disk.files || req.disk.files.length === 0) {
@@ -27,7 +28,7 @@ const create: RequestHandler = async (req, res, next) => {
     }
   }
 
-  const ops = req.disk.files.map((file) => createPhoto(data, file));
+  const ops = req.disk.files.map((file) => prisma.photo.ltCreate(data, file));
 
   await prisma.$transaction(ops);
 
@@ -50,44 +51,14 @@ const findOne: RequestHandler = async (req, res, next) => {
 };
 
 const getNavigation: RequestHandler = async (req, res, next) => {
-  const currentPhoto = await prisma.photo.findUnique({
-    select: { plantId: true, ownerId: true, takenAt: true },
-    where: { id: req.parser.id },
-  });
+  const navigation = await prisma.photo.getNavigation(
+    req.parser.id,
+    // FIXME: !
+    req.auth.userId!
+  );
 
-  if (currentPhoto) {
-    const requireBeingPublic =
-      currentPhoto.ownerId !== req.session.userId ? true : undefined;
-    const query: Prisma.PhotoFindFirstArgs = {
-      select: { id: true },
-      take: 1,
-      skip: 1,
-      cursor: {
-        id: req.parser.id,
-      },
-      where: {
-        plantId: currentPhoto.plantId,
-        public: requireBeingPublic,
-      },
-    };
-
-    const nextPhoto = await prisma.photo.findFirst({
-      ...query,
-      orderBy: [{ takenAt: 'desc' }, { id: 'desc' }],
-    });
-
-    const prevPhoto = await prisma.photo.findFirst({
-      ...query,
-      orderBy: [{ takenAt: 'asc' }, { id: 'asc' }],
-    });
-
-    const navigation: NavigationData = {
-      prev: prevPhoto ? prevPhoto : undefined,
-      next: nextPhoto ? nextPhoto : undefined,
-    };
-
-    res.send(navigation);
-  } else return next(LTRes.msg('PHOTO_NOT_FOUND').setCode(404));
+  if (navigation) res.send(navigation);
+  else return next(LTRes.msg('PHOTO_NOT_FOUND').setCode(404));
 };
 
 // let's be conservative here:
@@ -124,7 +95,7 @@ const modify: RequestHandler = async (req, res, next) => {
 
 const remove: RequestHandler = async (req, res, next) => {
   try {
-    await removePhoto(req.parser.id, req.auth.userId!);
+    await prisma.photo.ltRemove(req.parser.id, req.auth.userId!);
 
     res.send(LTRes.createCode(204));
   } catch (err) {

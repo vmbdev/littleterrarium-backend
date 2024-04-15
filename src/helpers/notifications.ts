@@ -1,5 +1,5 @@
 import { NotificationType, Plant } from '@prisma/client';
-import prisma from '../prismainstance.js';
+import prisma from '../prisma.js';
 
 const check = async () => {
   const plantsToWater = await checkProperty('waterNext');

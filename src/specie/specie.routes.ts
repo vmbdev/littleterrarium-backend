@@ -6,7 +6,7 @@ import specie from './specie.controller.js';
 const router = Router();
 
 router.post('/', auth.admin, specie.create);
-router.get('/name/:name?', auth.self, specie.find);
+router.get('/name/:name?', auth.self, specie.findByName);
 router.get(
   '/:id',
   auth.self,

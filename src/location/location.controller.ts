@@ -1,9 +1,9 @@
 import { RequestHandler } from 'express';
 import { Prisma, Light, Plant } from '@prisma/client';
-import prisma from '../prismainstance.js';
+
+import prisma from '../prisma.js';
 import { LTRes } from '../helpers/ltres.js';
-import { prepareForSortName } from '../helpers/textparser.js';
-import { plants as plantsConfig } from '../config/littleterrarium.config.js';
+import { SortColumn, SortOrder } from '../plant/plant.extension.js';
 
 const create: RequestHandler = async (req, res, next) => {
   // public is not really optional, but it has a default value
@@ -131,36 +131,13 @@ const findPlants: RequestHandler = async (req, res, next) => {
         },
       };
 
-      if (req.query.filter) {
-        query.where = {
-          ...query.where,
-          sortName: {
-            contains: prepareForSortName(req.query.filter as string),
-          },
-        };
-      }
-
-      if (req.query.limit && +req.query.limit > 0) {
-        query.take = +req.query.limit;
-      } else query.take = plantsConfig.number;
-
-      if (req.query.cursor && +req.query.cursor) {
-        query.cursor = { id: +req.query.cursor };
-        query.skip = 1;
-      }
-
-      if (req.query.sort) {
-        let order: 'asc' | 'desc' = 'asc';
-
-        if (req.query.order && req.query.order === 'desc') order = 'desc';
-
-        if (req.query.sort === 'name') query.orderBy = [{ sortName: order }];
-        else if (req.query.sort === 'date') {
-          query.orderBy = [{ createdAt: order }];
-        }
-      }
-
-      const plants = await prisma.plant.findMany(query);
+      const plants = await prisma.plant.ltFindMany(query, {
+        filter: (req.query.filter as string) ?? undefined,
+        limit: req.parser.limit,
+        cursor: req.parser.cursor,
+        sort: (req.query.sort as SortColumn) ?? undefined,
+        order: (req.query.order as SortOrder) ?? undefined,
+      });
 
       res.send(plants);
     }

@@ -1,10 +1,11 @@
 import type { RequestHandler } from 'express';
 import { Condition, Prisma } from '@prisma/client';
 
-import prisma from '../prismainstance.js';
+import prisma from '../prisma.js';
 import { LTRes } from '../helpers/ltres.js';
-import { PhotoColumnSelection } from '../helpers/photomanager.js';
-import { prepareForSortName } from '../helpers/textparser.js';
+import { prepareForSortName } from '../helpers/dataparser.js';
+import { SortColumn, SortOrder } from './plant.extension.js';
+import { PhotoColumnSelection } from '../photo/photo.extension.js';
 import { plants as plantsConfig } from '../config/littleterrarium.config.js';
 
 /**
@@ -118,33 +119,6 @@ const find: RequestHandler = async (req, res, next) => {
     if (photos) photos.where = { public: true };
   } else query.where = { ownerId: req.auth.userId };
 
-  if (req.query.filter) {
-    query.where = {
-      ...query.where,
-      sortName: {
-        contains: prepareForSortName(req.query.filter as string),
-      },
-    };
-  }
-
-  if (req.query.limit && +req.query.limit > 0) {
-    query.take = +req.query.limit;
-  } else query.take = plantsConfig.number;
-
-  if (req.query.cursor && +req.query.cursor) {
-    query.cursor = { id: +req.query.cursor };
-    query.skip = 1;
-  }
-
-  if (req.query.sort) {
-    let order: 'asc' | 'desc' = 'asc';
-
-    if (req.query.order && req.query.order === 'desc') order = 'desc';
-
-    if (req.query.sort === 'name') query.orderBy = [{ sortName: order }];
-    else if (req.query.sort === 'date') query.orderBy = [{ createdAt: order }];
-  }
-
   query.include = {
     photos: photos ? photos : false,
     cover: photos ? true : false,
@@ -153,7 +127,14 @@ const find: RequestHandler = async (req, res, next) => {
     },
   };
 
-  const plants = await prisma.plant.findMany(query);
+  const plants = await prisma.plant.ltFindMany(query, {
+    filter: (req.query.filter as string) ?? undefined,
+    limit: req.parser.limit,
+    cursor: req.parser.cursor,
+    sort: (req.query.sort as SortColumn) ?? undefined,
+    order: (req.query.order as SortOrder) ?? undefined,
+  });
+
   res.send(plants);
 };
 
@@ -316,11 +297,11 @@ const getPhotos: RequestHandler = async (req, res, next) => {
 
 const getCover: RequestHandler = async (req, res, next) => {
   if (req.parser.id) {
-    const plant = await prisma.plant.getCoverId(req.parser.id);
+    const cover = await prisma.plant.getCoverId(req.parser.id);
 
-    if (plant) {
-      if (plant.ownerId === req.auth.userId || plant.public) {
-        res.send({ coverId: plant.coverId });
+    if (cover) {
+      if (cover.ownerId === req.auth.userId || cover.public) {
+        res.send({ coverId: cover.coverId });
       } else return next(LTRes.createCode(403));
     } else next(LTRes.msg('PLANT_NOT_FOUND').setCode(404));
   }

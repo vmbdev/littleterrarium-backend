@@ -1,8 +1,8 @@
 import { RequestHandler } from 'express';
 import { Prisma } from '@prisma/client';
 
-import prisma from '../prismainstance.js';
-import { PhotoColumnSelection } from '../helpers/photomanager.js';
+import prisma from '../prisma.js';
+import { PhotoColumnSelection } from '../photo/photo.extension.js';
 
 const summary: RequestHandler = async (req, res, next) => {
   const [users, locations, plants, photos, species] = await Promise.all([

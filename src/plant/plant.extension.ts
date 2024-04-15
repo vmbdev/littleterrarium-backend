@@ -1,8 +1,27 @@
 import { Plant, Prisma } from '@prisma/client';
+import { DefaultArgs } from '@prisma/client/runtime/library';
 import dayjs from 'dayjs';
 
-import prisma from '../prismainstance';
-import { removePhoto } from '../helpers/photomanager';
+import prisma from '../prisma';
+import { nextDate, prepareForSortName } from '../helpers/dataparser';
+import { plants as plantsConfig } from '../config/littleterrarium.config.js';
+
+export interface PlantCover {
+  coverId: number | null;
+  ownerId: number;
+  public: boolean;
+}
+
+export interface PlantFindOptions {
+  filter?: string;
+  limit?: number;
+  cursor?: number;
+  sort?: SortColumn;
+  order?: SortOrder;
+}
+
+export type SortColumn = 'name' | 'date';
+export type SortOrder = 'asc' | 'desc';
 
 export const plantExtension = Prisma.defineExtension({
   name: 'plant',
@@ -19,14 +38,18 @@ export const plantExtension = Prisma.defineExtension({
 
         // if water/fertiliser frequencies and last times are given,
         // calculate the next time it must be done
-        if (data.waterFreq && data.waterLast && dayjs(data.waterLast).isValid()) {
+        if (
+          data.waterFreq &&
+          data.waterLast &&
+          dayjs(data.waterLast).isValid()
+        ) {
           data.waterNext = nextDate(data.waterLast, data.waterFreq);
         }
         if (data.fertFreq && data.fertLast && dayjs(data.fertLast).isValid()) {
           data.fertNext = nextDate(data.fertLast, data.fertFreq);
         }
 
-        return await prisma.plant.create({ data });
+        return prisma.plant.create({ data });
       },
 
       async ltUpdate(
@@ -128,25 +151,55 @@ export const plantExtension = Prisma.defineExtension({
         // update references of the hashes of the photos
         for (const plant of plants) {
           for (const photo of plant.photos) {
-            await removePhoto(photo.id, userId);
+            await prisma.photo.ltRemove(photo.id, userId);
           }
         }
 
         return plants.length;
       },
 
-      async getCoverId(id: number) {
-        const plant = await prisma.plant.findUnique({
+      ltFindMany(
+        query: Prisma.PlantFindManyArgs<DefaultArgs>,
+        options: PlantFindOptions
+      ): Promise<Plant[]> {
+        if (options.filter) {
+          query.where = {
+            ...query.where,
+            sortName: {
+              contains: prepareForSortName(options.filter as string),
+            },
+          };
+        }
+
+        if (options.limit && options.limit > 0) {
+          query.take = options.limit;
+        } else query.take = plantsConfig.number;
+
+        if (options.cursor) {
+          query.cursor = { id: options.cursor };
+          query.skip = 1;
+        }
+
+        if (options.sort) {
+          let order: 'asc' | 'desc' = 'asc';
+
+          if (options.order && options.order === 'desc') order = 'desc';
+
+          if (options.sort === 'name') query.orderBy = [{ sortName: order }];
+          else if (options.sort === 'date') {
+            query.orderBy = [{ createdAt: order }];
+          }
+        }
+
+        return prisma.plant.findMany(query);
+      },
+
+      getCoverId(id: number): Promise<PlantCover | null> {
+        return prisma.plant.findUnique({
           select: { coverId: true, ownerId: true, public: true },
           where: { id },
         });
-
-        return plant;
       },
     },
   },
 });
-
-export const nextDate = (last: Date | string, freq: number): Date => {
-  return dayjs(last).add(freq, 'days').toDate();
-};

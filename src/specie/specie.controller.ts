@@ -1,6 +1,6 @@
 import { RequestHandler } from 'express';
 import { LTRes } from '../helpers/ltres.js';
-import prisma from '../prismainstance.js';
+import prisma from '../prisma.js';
 
 const create: RequestHandler = async (req, res, next) => {
   const requiredFields = ['family', 'name'];
@@ -33,7 +33,7 @@ const create: RequestHandler = async (req, res, next) => {
   }
 };
 
-const find: RequestHandler = async (req, res, next) => {
+const findByName: RequestHandler = async (req, res, next) => {
   if (!req.params.name) return next(LTRes.msg('SPECIE_NAME_NOT_VALID'));
 
   const name = req.params.name.toLowerCase();
@@ -98,7 +98,7 @@ const remove: RequestHandler = async (req, res, next) => {
 
 export default {
   create,
-  find,
+  findByName,
   findOne,
   modify,
   remove,

@@ -7,7 +7,7 @@ import session from 'express-session';
 import { PrismaSessionStore } from '@quixo3/prisma-session-store';
 import { Role } from '@prisma/client';
 
-import prisma from './prismainstance.js';
+import prisma from './prisma.js';
 
 import apiRoutes from './api.routes.js';
 import { enableAngularRouting } from './angular.js';

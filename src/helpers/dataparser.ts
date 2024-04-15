@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 export const removeAccents = (val: string) => {
   return val.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 };
@@ -19,7 +21,13 @@ export const stringQueryToNumbers = (str: string): number[] => {
   }, []);
 }
 
+export const nextDate = (last: Date | string, freq: number): Date => {
+  return dayjs(last).add(freq, 'days').toDate();
+};
+
+
 export default {
   removeAccents,
   stringQueryToNumbers,
+  nextDate,
 };

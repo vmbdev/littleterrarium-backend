@@ -21,10 +21,16 @@ router.post(
   auth.checkRelationship('location', 'locationId'),
   plant.create
 );
-router.get('/', auth.self, plant.find);
+router.get(
+  '/',
+  auth.self,
+  parser.number({ cursor: false, limit: false }, 'query'),
+  plant.find
+);
 router.get(
   '/user/:userId',
   parser.number({ userId: true }, 'params'),
+  parser.number({ cursor: false, limit: false }, 'query'),
   plant.find
 );
 router.get('/count', plant.getCount);
