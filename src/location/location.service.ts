@@ -1,8 +1,8 @@
 import { Prisma } from '@prisma/client';
 
-import prisma from '../prisma';
+// import prisma from '../prisma';
 
-export const locationExtension = Prisma.defineExtension({
+export const locationService = Prisma.defineExtension({
   name: 'location',
   model: {
     location: {

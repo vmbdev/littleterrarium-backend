@@ -27,7 +27,7 @@ type DiskOptions = {
   destiny?: string;
 };
 
-export const generateDisk: RequestHandler = (req, res, next) => {
+export const generateDisk: RequestHandler = (req, _res, next) => {
   req.disk = {};
 
   next();
@@ -47,7 +47,7 @@ const processFile = async (file: Express.Multer.File, options: DiskOptions) => {
 };
 
 export const image = (directory?: string) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, _res: Response, next: NextFunction) => {
     if (req.file) {
       try {
         req.disk.file = await processFile(req.file, {
@@ -67,7 +67,7 @@ export const image = (directory?: string) => {
 };
 
 export const gallery = (directory?: string) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, _res: Response, next: NextFunction) => {
     if (req.files) {
       req.disk.files = [];
 

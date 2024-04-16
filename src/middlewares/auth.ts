@@ -18,7 +18,7 @@ declare global {
   }
 }
 
-export const generateAuth: RequestHandler = (req, res, next) => {
+export const generateAuth: RequestHandler = (req, _res, next) => {
   // this object made much more sense before, but we're keeping it up for
   // compatibility
   req.auth = {
@@ -30,7 +30,7 @@ export const generateAuth: RequestHandler = (req, res, next) => {
 
 // only allow if it's signed in, and if the destined userId is the owner or if
 // user's an admin
-export const self: RequestHandler = (req, res, next) => {
+export const self: RequestHandler = (req, _res, next) => {
   if (!req.session.signedIn) return next(LTRes.createCode(401));
   const userId = +req.params.userId ?? +req.body.userId;
 
@@ -41,7 +41,7 @@ export const self: RequestHandler = (req, res, next) => {
   next();
 };
 
-export const admin: RequestHandler = (req, res, next) => {
+export const admin: RequestHandler = (req, _res, next) => {
   if (!req.session.signedIn || req.session.role !== Role.ADMIN) {
     return next(LTRes.createCode(403));
   }
@@ -49,7 +49,7 @@ export const admin: RequestHandler = (req, res, next) => {
   next();
 };
 
-export const signedIn: RequestHandler = (req, res, next) => {
+export const signedIn: RequestHandler = (req, _res, next) => {
   if (!req.session.signedIn) return next(LTRes.createCode(403));
 
   next();
@@ -97,7 +97,7 @@ export const getModelDelegate = (model: string): any => {
  * @returns {Function} - Express Middleware
  */
 export const checkRelationship = (model: string, idField: string) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, _res: Response, next: NextFunction) => {
     let id;
     const prismaDelegate = getModelDelegate(model);
 
@@ -132,7 +132,7 @@ export const checkRelationship = (model: string, idField: string) => {
  * @returns {function} - Express Middleware
  */
 export const checkOwnership = (model: string, mass: boolean = false) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, _res: Response, next: NextFunction) => {
     let ids;
     const prismaDelegate = getModelDelegate(model);
 

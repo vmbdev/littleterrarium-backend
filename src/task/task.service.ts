@@ -3,7 +3,7 @@ import dayjs from 'dayjs';
 
 import prisma from '../prisma';
 
-export const taskExtension = Prisma.defineExtension({
+export const taskService = Prisma.defineExtension({
   name: 'task',
   model: {
     plant: {

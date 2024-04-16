@@ -9,10 +9,10 @@ const __dirname = path.dirname(__filename);
 const uploader = () => {
   return multer({
     storage: multer.diskStorage({
-      destination: (req, file, cb) => {
+      destination: (_req, _file, cb) => {
         cb(null, path.join(__dirname, '../../temp'));
       },
-      filename: (req, file, cb) => {
+      filename: (_req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
         cb(null, file.fieldname + '-' + uniqueSuffix);
       },

@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 
 import prisma from '../prisma.js';
 import { LTRes } from '../helpers/ltres.js';
-import { PhotoColumnSelection } from './photo.extension.js';
+import { PhotoColumnSelection } from './photo.service.js';
 
 const create: RequestHandler = async (req, res, next) => {
   if (!req.disk.files || req.disk.files.length === 0) {

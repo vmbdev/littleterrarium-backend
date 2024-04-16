@@ -8,7 +8,7 @@ const defaultMessages: { [key: number]: string } = {
   500: 'SERVER_ERROR',
 };
 
-const errorHandling: ErrorRequestHandler = async (err, req, res, next) => {
+const errorHandling: ErrorRequestHandler = async (err, req, res, _next) => {
   if (process.env.NODE_ENV !== 'production') console.error(err);
 
   // remove temporary files that didn't get processed

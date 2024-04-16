@@ -3,7 +3,7 @@ import { Prisma, Light, Plant } from '@prisma/client';
 
 import prisma from '../prisma.js';
 import { LTRes } from '../helpers/ltres.js';
-import { SortColumn, SortOrder } from '../plant/plant.extension.js';
+import { SortColumn, SortOrder } from '../plant/plant.service.js';
 
 const create: RequestHandler = async (req, res, next) => {
   // public is not really optional, but it has a default value
@@ -54,7 +54,7 @@ const create: RequestHandler = async (req, res, next) => {
   }
 };
 
-const find: RequestHandler = async (req, res, next) => {
+const find: RequestHandler = async (req, res, _next) => {
   const query: Prisma.LocationFindManyArgs = {
     orderBy: { createdAt: 'asc' },
   };

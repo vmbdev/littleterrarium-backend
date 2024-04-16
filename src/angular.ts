@@ -19,7 +19,7 @@ export const enableAngularRouting = async (
   const languagesToSend: LanguageSet = { locales: [] };
   let distStat;
 
-  app.get('/api/angular/locales', (req, res, next) => {
+  app.get('/api/angular/locales', (_req, res, next) => {
     if (languagesToSend.locales.length > 0) res.send(languagesToSend);
     else next(LTRes.createCode(400));
   });
@@ -88,7 +88,7 @@ const setAngularRoutes = async (
   try {
     await stat(indexPath);
     app.use(dir, express.static(path.join(distPath, language ? language : '')));
-    app.get(url, (req, res) => {
+    app.get(url, (_req, res) => {
       res.sendFile(indexPath);
     });
 

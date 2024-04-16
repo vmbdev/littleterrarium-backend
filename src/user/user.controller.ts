@@ -4,11 +4,7 @@ import { Role, Prisma } from '@prisma/client';
 import prisma from '../prisma.js';
 import Password from '../helpers/password.js';
 import { LTRes } from '../helpers/ltres.js';
-import {
-  isEmailValid,
-  isUsernameValid,
-  removePassword,
-} from '../helpers/user.js';
+import { isEmailValid, isUsernameValid } from './user.service.js';
 import { username as usernameConfig } from '../config/littleterrarium.config.js';
 
 export interface UserPreferences {
@@ -21,12 +17,7 @@ export interface UserPreferences {
 
 const register: RequestHandler = async (req, res, next) => {
   const requiredFields = ['username', 'password', 'email'];
-  const optionalFields = [
-    'firstname',
-    'lastname',
-    'public',
-    'bio',
-  ];
+  const optionalFields = ['firstname', 'lastname', 'public', 'bio'];
   const data: any = {};
 
   for (const field of requiredFields) {
@@ -74,13 +65,13 @@ const register: RequestHandler = async (req, res, next) => {
   }
 
   try {
-    const user = await prisma.user.create({ data });
+    const user = await prisma.user.ltCreate(data);
 
     req.session.signedIn = true;
     req.session.role = user.role;
     req.session.userId = user.id;
 
-    res.send(removePassword(user));
+    res.send(user);
   } catch (err: any) {
     if (err.code === 'P2002') {
       next(LTRes.msg('USER_FIELD_EXISTS').errorField(err.meta.target[0]));
@@ -92,26 +83,13 @@ const register: RequestHandler = async (req, res, next) => {
  *  Find user by username or user id
  */
 const find: RequestHandler = async (req, res, next) => {
-  const conditions: any = {};
+  let conditions: Prisma.UserWhereUniqueInput;
 
-  if (req.params.username) conditions.username = req.params.username;
-  else if (req.parser.id) conditions.id = req.parser.id;
+  if (req.params.username) conditions = { username: req.params.username };
+  else if (req.parser.id) conditions = { id: req.parser.id };
   else return next(LTRes.createCode(401));
 
-  const user = await prisma.user.findUnique({
-    where: conditions,
-    select: {
-      id: true,
-      username: true,
-      firstname: true,
-      lastname: true,
-      bio: true,
-      avatar: true,
-      role: true,
-      public: true,
-      createdAt: true,
-    },
-  });
+  const user = await prisma.user.ltFind(conditions);
 
   if (user) {
     if (
@@ -146,8 +124,7 @@ const modify: RequestHandler = async (req, res, next) => {
     // check for username and email validity
     const invalidUsername =
       field === 'username' && !isUsernameValid(req.body.username);
-    const invalidEmail =
-      field === 'email' && !isEmailValid(req.body.email);
+    const invalidEmail = field === 'email' && !isEmailValid(req.body.email);
 
     if (invalidUsername || invalidEmail) {
       return next(LTRes.msg('USER_FIELD_INVALID').errorField(field));
@@ -190,7 +167,7 @@ const modify: RequestHandler = async (req, res, next) => {
           locale: tempPrefs.locale,
           plantListSort: tempPrefs.plantListSort,
           plantListOrder: tempPrefs.plantListOrder,
-        }
+        };
 
         break;
       }
@@ -216,12 +193,9 @@ const modify: RequestHandler = async (req, res, next) => {
   }
 
   try {
-    const user = await prisma.user.update({
-      where: { id: req.auth.userId },
-      data,
-    });
+    const user = await prisma.user.ltUpdate(data, req.auth.userId!);
 
-    res.send(removePassword(user));
+    res.send(user);
   } catch (err: any) {
     if (err.code === 'P2002') {
       return next(
@@ -232,9 +206,9 @@ const modify: RequestHandler = async (req, res, next) => {
 };
 
 const remove: RequestHandler = async (req, res, next) => {
-  if (req.params.id) {
+  if (req.parser.id) {
     try {
-      await prisma.user.delete({ where: { id: +req.params.id }});
+      await prisma.user.delete({ where: { id: req.parser.id } });
 
       res.send(LTRes.createCode(204));
     } catch (err: any) {
@@ -254,11 +228,11 @@ const checkPassword: RequestHandler = (req, res, next) => {
   } else return next(LTRes.createCode(400));
 };
 
-const passwordRequirements: RequestHandler = (req, res, next) => {
+const passwordRequirements: RequestHandler = (_req, res, _next) => {
   res.send(Password.requirements());
 };
 
-const usernameRequirements: RequestHandler = (req, res, next) => {
+const usernameRequirements: RequestHandler = (_req, res, _next) => {
   res.send(usernameConfig);
 };
 

@@ -1,5 +1,4 @@
 import { mkdirSync } from 'node:fs';
-import path from 'node:path';
 import express, { Express } from 'express';
 import 'express-async-errors';
 import cors from 'cors';

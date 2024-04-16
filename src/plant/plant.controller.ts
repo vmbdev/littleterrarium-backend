@@ -4,8 +4,8 @@ import { Condition, Prisma } from '@prisma/client';
 import prisma from '../prisma.js';
 import { LTRes } from '../helpers/ltres.js';
 import { prepareForSortName } from '../helpers/dataparser.js';
-import { SortColumn, SortOrder } from './plant.extension.js';
-import { PhotoColumnSelection } from '../photo/photo.extension.js';
+import { SortColumn, SortOrder } from './plant.service.js';
+import { PhotoColumnSelection } from '../photo/photo.service.js';
 import { plants as plantsConfig } from '../config/littleterrarium.config.js';
 
 /**
@@ -99,7 +99,7 @@ const create: RequestHandler = async (req, res, next) => {
  * The object contains one Photo object as well as the Specie object related
  * to it.
  */
-const find: RequestHandler = async (req, res, next) => {
+const find: RequestHandler = async (req, res, _next) => {
   const query: Prisma.PlantFindManyArgs = {};
   let photos: Prisma.Plant$photosArgs | undefined;
 
@@ -326,7 +326,7 @@ const remove: RequestHandler = async (req, res, next) => {
   else res.send(LTRes.createCode(204));
 };
 
-const getCount: RequestHandler = async (req, res, next) => {
+const getCount: RequestHandler = async (_req, res, _next) => {
   const count = await prisma.plant.count();
 
   res.send({ count });

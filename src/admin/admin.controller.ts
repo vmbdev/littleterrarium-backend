@@ -2,9 +2,9 @@ import { RequestHandler } from 'express';
 import { Prisma } from '@prisma/client';
 
 import prisma from '../prisma.js';
-import { PhotoColumnSelection } from '../photo/photo.extension.js';
+import { PhotoColumnSelection } from '../photo/photo.service.js';
 
-const summary: RequestHandler = async (req, res, next) => {
+const summary: RequestHandler = async (_req, res, _next) => {
   const [users, locations, plants, photos, species] = await Promise.all([
     prisma.user.count(),
     prisma.location.count(),
@@ -16,7 +16,7 @@ const summary: RequestHandler = async (req, res, next) => {
   res.send({ users, locations, plants, photos, species });
 };
 
-const findAllUsers: RequestHandler = async (req, res, next) => {
+const findAllUsers: RequestHandler = async (req, res, _next) => {
   const query: Prisma.UserFindManyArgs = {
     include: {
       _count: {
@@ -43,7 +43,7 @@ const findAllUsers: RequestHandler = async (req, res, next) => {
   res.send(usersWithoutPwd);
 };
 
-const findAllLocations: RequestHandler = async (req, res, next) => {
+const findAllLocations: RequestHandler = async (req, res, _next) => {
   const query: Prisma.LocationFindManyArgs = {};
 
   if (req.query.limit && +req.query.limit > 0) {
@@ -60,7 +60,7 @@ const findAllLocations: RequestHandler = async (req, res, next) => {
   res.send(locations);
 };
 
-const findAllPlants: RequestHandler = async (req, res, next) => {
+const findAllPlants: RequestHandler = async (req, res, _next) => {
   const query: Prisma.PlantFindManyArgs = {};
 
   if (req.query.limit && +req.query.limit > 0) {
@@ -77,7 +77,7 @@ const findAllPlants: RequestHandler = async (req, res, next) => {
   res.send(plants);
 };
 
-const findAllPhoto: RequestHandler = async (req, res, next) => {
+const findAllPhoto: RequestHandler = async (req, res, _next) => {
   const query: Prisma.PhotoFindManyArgs = {};
 
   if (req.query.limit && +req.query.limit > 0) {
@@ -96,7 +96,7 @@ const findAllPhoto: RequestHandler = async (req, res, next) => {
   res.send(photos);
 };
 
-const findAllSpecie: RequestHandler = async (req, res, next) => {
+const findAllSpecie: RequestHandler = async (req, res, _next) => {
   const query: Prisma.SpecieFindManyArgs = {};
 
   if (req.query.limit && +req.query.limit > 0) {

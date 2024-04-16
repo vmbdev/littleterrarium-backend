@@ -1,9 +1,10 @@
 import { PrismaClient } from '@prisma/client';
 
-import { plantExtension } from './plant/plant.extension';
-import { locationExtension } from './location/location.extension';
-import { taskExtension } from './task/task.extension';
-import { photoExtension } from './photo/photo.extension';
+import { plantService } from './plant/plant.service.js';
+import { locationService } from './location/location.service.js';
+import { photoService } from './photo/photo.service.js';
+import { userService } from './user/user.service.js';
+import { taskService } from './task/task.service.js';
 
 const prisma = new PrismaClient({
   log: [
@@ -15,9 +16,10 @@ const prisma = new PrismaClient({
 });
 
 const prismaExtended = prisma
-  .$extends(plantExtension)
-  .$extends(locationExtension)
-  .$extends(photoExtension)
-  .$extends(taskExtension);
+  .$extends(plantService)
+  .$extends(locationService)
+  .$extends(photoService)
+  .$extends(userService)
+  .$extends(taskService);
 
 export default prismaExtended;

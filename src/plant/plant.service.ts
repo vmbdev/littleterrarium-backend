@@ -23,7 +23,7 @@ export interface PlantFindOptions {
 export type SortColumn = 'name' | 'date';
 export type SortOrder = 'asc' | 'desc';
 
-export const plantExtension = Prisma.defineExtension({
+export const plantService = Prisma.defineExtension({
   name: 'plant',
   model: {
     plant: {

@@ -21,14 +21,14 @@ declare global {
   }
 }
 
-export const generateParser: RequestHandler = (req, res, next) => {
+export const generateParser: RequestHandler = (req, _res, next) => {
   req.parser = {};
 
   next();
 };
 
 export const number = (list: ParserOptions, object: ParserObjects = 'body') => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, _res: Response, next: NextFunction) => {
     for (const field in list) {
       let place;
 
@@ -57,7 +57,7 @@ export const number = (list: ParserOptions, object: ParserObjects = 'body') => {
 };
 
 export const numbers = (list: ParserOptions, object: ParserObjects = 'body') => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, _res: Response, next: NextFunction) => {
     for (const field in list) {
       let place;
 

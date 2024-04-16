@@ -14,7 +14,7 @@ export const PhotoColumnSelection: Prisma.PhotoSelect = {
   takenAt: true,
 };
 
-export const photoExtension = Prisma.defineExtension({
+export const photoService = Prisma.defineExtension({
   name: 'photo',
   model: {
     photo: {
