@@ -1,4 +1,5 @@
 import { Router } from 'express';
+
 import photo from './photo.controller.js';
 import multerUploader from '../middlewares/uploader.js';
 import auth from '../middlewares/auth.js';

@@ -1,7 +1,7 @@
 import { Plant, Prisma } from '@prisma/client';
 import dayjs from 'dayjs';
 
-import prisma from '../prisma';
+import prisma from '../prisma.js';
 
 export const taskService = Prisma.defineExtension({
   name: 'task',

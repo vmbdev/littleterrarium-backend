@@ -1,6 +1,6 @@
 import { Hash, Photo, Prisma, PrismaPromise } from '@prisma/client';
 
-import prisma from '../prisma';
+import prisma from '../prisma.js';
 import { NavigationData } from '../helpers/ltres.js';
 import filesystem, { LocalFile } from '../helpers/filesystem.js';
 

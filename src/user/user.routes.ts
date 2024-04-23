@@ -1,4 +1,5 @@
 import { Router } from 'express';
+
 import user from './user.controller.js';
 import multerUploader from '../middlewares/uploader.js';
 import auth from '../middlewares/auth.js';

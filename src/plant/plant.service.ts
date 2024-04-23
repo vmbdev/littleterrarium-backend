@@ -2,8 +2,8 @@ import { Plant, Prisma } from '@prisma/client';
 import { DefaultArgs } from '@prisma/client/runtime/library';
 import dayjs from 'dayjs';
 
-import prisma from '../prisma';
-import { nextDate, prepareForSortName } from '../helpers/dataparser';
+import prisma from '../prisma.js';
+import { nextDate, prepareForSortName } from '../helpers/dataparser.js';
 import { plants as plantsConfig } from '../config/littleterrarium.config.js';
 
 export interface PlantCover {

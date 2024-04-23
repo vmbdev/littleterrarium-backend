@@ -2,7 +2,7 @@ import { Prisma, User, UserRecoveryToken } from '@prisma/client';
 import crypto from 'node:crypto';
 import dayjs from 'dayjs';
 
-import prisma from '../prisma';
+import prisma from '../prisma.js';
 import Password from '../helpers/password.js';
 import { username as usernameConfig } from '../config/littleterrarium.config.js';
 
