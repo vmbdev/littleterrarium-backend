@@ -13,7 +13,7 @@ router.post(
   auth.self,
   uploader.array('photo', 10),
   parser.number({ plantId: true }, 'body'),
-  auth.checkRelationship('plant', 'plantId'),
+  auth.checkRelationship('plant', 'plantId', 'body'),
   disk.gallery(),
   photo.create
 );
@@ -26,15 +26,15 @@ router.get(
 router.patch(
   '/',
   auth.self,
-  auth.checkOwnership('photo'),
-  auth.checkRelationship('plant', 'plantId'),
+  auth.checkOwnership('photo', 'body'),
+  auth.checkRelationship('plant', 'plantId', 'body'),
   parser.number({ id: true }, 'body'),
   photo.modify
 );
 router.delete(
   '/:id',
   auth.self,
-  auth.checkOwnership('photo'),
+  auth.checkOwnership('photo', 'params'),
   parser.number({ id: true }, 'params'),
   photo.remove
 );

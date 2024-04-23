@@ -53,7 +53,6 @@ const findOne: RequestHandler = async (req, res, next) => {
 const getNavigation: RequestHandler = async (req, res, next) => {
   const navigation = await prisma.photo.getNavigation(
     req.parser.id,
-    // FIXME: !
     req.auth.userId!
   );
 

@@ -18,6 +18,8 @@ declare global {
   }
 }
 
+export type AuthObjects = 'body' | 'query' | 'params';
+
 export const generateAuth: RequestHandler = (req, _res, next) => {
   // this object made much more sense before, but we're keeping it up for
   // compatibility
@@ -96,17 +98,14 @@ export const getModelDelegate = (model: string): any => {
  * @param {string} idField - The name of the ID field in the database (usually 'id')
  * @returns {Function} - Express Middleware
  */
-export const checkRelationship = (model: string, idField: string) => {
+export const checkRelationship = (
+  model: string,
+  idField: string,
+  object: AuthObjects
+) => {
   return async (req: Request, _res: Response, next: NextFunction) => {
-    let id;
     const prismaDelegate = getModelDelegate(model);
-
-    if (
-      req.method === 'PATCH' ||
-      (req.method === 'POST' && req.body[idField])
-    ) {
-      id = +req.body[idField];
-    } else if (req.params[idField]) id = +req.params[idField];
+    const id = +req[object][idField];
 
     if (prismaDelegate && id) {
       try {
@@ -131,19 +130,17 @@ export const checkRelationship = (model: string, idField: string) => {
  * @param {boolean} mass Whether it's receiving multiple ids in a string
  * @returns {function} - Express Middleware
  */
-export const checkOwnership = (model: string, mass: boolean = false) => {
+export const checkOwnership = (
+  model: string,
+  object: AuthObjects,
+  mass: boolean = false
+) => {
   return async (req: Request, _res: Response, next: NextFunction) => {
-    let ids;
     const prismaDelegate = getModelDelegate(model);
+    let ids;
 
-    if (mass) {
-      ids = stringQueryToNumbers(req.params.id);
-    } else if (
-      req.method === 'PATCH' ||
-      (req.method === 'POST' && req.body.id)
-    ) {
-      ids = [+req.body.id];
-    } else ids = [+req.params.id];
+    if (mass) ids = stringQueryToNumbers(req[object].id);
+    else ids = [+req[object].id];
 
     if (prismaDelegate && ids) {
       try {

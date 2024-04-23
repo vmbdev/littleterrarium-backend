@@ -125,6 +125,19 @@ export const plantService = Prisma.defineExtension({
         return plant;
       },
 
+      async moveLocation(ids: number[], locationId: number): Promise<number> {
+        const upd = await prisma.plant.updateMany({
+          where: {
+            id: { in: ids },
+          },
+          data: {
+            locationId,
+          },
+        });
+
+        return upd.count;
+      },
+
       async ltRemove(ids: number[], userId: number): Promise<number> {
         const proms = [];
         // we need the photos to update their hash, so we can't use deleteMany

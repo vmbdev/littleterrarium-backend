@@ -18,7 +18,7 @@ router.post(
     },
     'body'
   ),
-  auth.checkRelationship('location', 'locationId'),
+  auth.checkRelationship('location', 'locationId', 'body'),
   plant.create
 );
 router.get(
@@ -42,11 +42,20 @@ router.get(
 );
 router.get('/:id/cover', parser.number({ id: true }, 'params'), plant.getCover);
 router.patch(
+  '/:id/location/:locationId',
+  auth.self,
+  auth.checkOwnership('plant', 'params', true),
+  auth.checkRelationship('location', 'locationId', 'params'),
+  parser.numbers({ id: true }, 'params'),
+  parser.number({ locationId: true }, 'params'),
+  plant.moveLocation
+)
+router.patch(
   '/',
   auth.self,
-  auth.checkOwnership('plant'),
-  auth.checkRelationship('location', 'locationId'),
-  auth.checkRelationship('photo', 'coverId'),
+  auth.checkOwnership('plant', 'body'),
+  auth.checkRelationship('location', 'locationId', 'body'),
+  auth.checkRelationship('photo', 'coverId', 'body'),
   parser.number(
     {
       id: true,
@@ -64,7 +73,7 @@ router.patch(
 router.delete(
   '/:id',
   auth.self,
-  auth.checkOwnership('plant', true),
+  auth.checkOwnership('plant', 'params', true),
   parser.numbers({ id: true }, 'params'),
   plant.remove
 );

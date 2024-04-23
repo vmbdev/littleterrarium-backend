@@ -38,7 +38,7 @@ router.patch(
   '/',
   auth.self,
   uploader.single('picture'),
-  auth.checkOwnership('location'),
+  auth.checkOwnership('location', 'body'),
   parser.number({ id: true }, 'body'),
   disk.image('location'),
   location.modify
@@ -46,7 +46,7 @@ router.patch(
 router.delete(
   '/:id',
   auth.self,
-  auth.checkOwnership('location'),
+  auth.checkOwnership('location', 'params'),
   parser.number({ id: true }, 'params'),
   location.remove
 );

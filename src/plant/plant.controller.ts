@@ -269,6 +269,22 @@ const modify: RequestHandler = async (req, res, next) => {
   }
 };
 
+const moveLocation: RequestHandler = async (req, res, next) => {
+  const ids = req.parser.id;
+
+  if (ids.length > plantsConfig.maxForMassAction) {
+    return next(
+      LTRes.msg('PLANT_MAX_EXCEEDED').errorValues(plantsConfig.maxForMassAction)
+    );
+  }
+
+  const count = await prisma.plant.moveLocation(ids, req.parser.locationId);
+
+  if (count === 0) return next(LTRes.msg('PLANT_NOT_FOUND'));
+  else if (count < ids.length) return next(LTRes.msg('PLANT_MOVE_INCOMPLETE'));
+  else res.send(LTRes.createCode(204));
+}
+
 const getPhotos: RequestHandler = async (req, res, next) => {
   const plant = await prisma.plant.findUnique({
     select: { public: true, ownerId: true },
@@ -340,5 +356,6 @@ export default {
   getCover,
   getCount,
   modify,
+  moveLocation,
   remove,
 };
