@@ -167,6 +167,7 @@ const modify: RequestHandler = async (req, res, next) => {
           locale: tempPrefs.locale,
           plantListSort: tempPrefs.plantListSort,
           plantListOrder: tempPrefs.plantListOrder,
+          plantListView: tempPrefs.plantListView,
         };
 
         break;
