@@ -43,7 +43,6 @@ export const taskService = Prisma.defineExtension({
         });
       
         // not sold on this, yet I think it's better than querying the db twice
-        // FIXME: any
         const list: any = tasks.map((i) => {
           if (dayjs(i.waterNext).isAfter(dayjs())) i.waterNext = null;
           if (dayjs(i.fertNext).isAfter(dayjs())) i.fertNext = null;

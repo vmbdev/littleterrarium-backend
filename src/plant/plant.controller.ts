@@ -260,7 +260,7 @@ const modify: RequestHandler = async (req, res, next) => {
     const plant = await prisma.plant.ltUpdate(
       data,
       req.parser.id,
-      req.auth.userId! // FIXME: take care of !
+      req.auth.userId!
     );
 
     res.send(plant);
@@ -335,7 +335,6 @@ const remove: RequestHandler = async (req, res, next) => {
     );
   }
 
-  // FIXME !
   const deleted = await prisma.plant.ltRemove(ids, req.auth.userId!);
 
   if (deleted === 0) return next(LTRes.msg('PLANT_NOT_VALID'));
