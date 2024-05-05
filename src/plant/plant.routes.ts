@@ -25,7 +25,7 @@ router.post(
 router.get(
   '/',
   auth.self,
-  parser.number({ cursor: false, limit: false }, 'query'),
+  parser.number({ offset: false, limit: false }, 'query'),
   plant.find
 );
 router.get(
