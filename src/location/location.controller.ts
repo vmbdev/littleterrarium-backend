@@ -134,7 +134,7 @@ const findPlants: RequestHandler = async (req, res, next) => {
       const plants = await prisma.plant.ltFindMany(query, {
         filter: (req.query.filter as string) ?? undefined,
         limit: req.parser.limit,
-        cursor: req.parser.cursor,
+        offset: req.parser.offset,
         sort: (req.query.sort as SortColumn) ?? undefined,
         order: (req.query.order as SortOrder) ?? undefined,
       });

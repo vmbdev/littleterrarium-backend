@@ -31,7 +31,7 @@ router.get(
 router.get(
   '/user/:userId',
   parser.number({ userId: true }, 'params'),
-  parser.number({ cursor: false, limit: false }, 'query'),
+  parser.number({ offset: false, limit: false }, 'query'),
   plant.find
 );
 router.get('/count', plant.getCount);
