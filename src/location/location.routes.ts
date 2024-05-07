@@ -31,7 +31,7 @@ router.get(
 );
 router.get(
   '/:id/plants/count',
-  parser.number({ id: true }, 'params'),
+  parser.number({ id: false }, 'params'),
   location.getPlantsCount
 );
 router.patch(

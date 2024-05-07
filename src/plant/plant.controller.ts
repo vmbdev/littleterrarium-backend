@@ -283,7 +283,7 @@ const moveLocation: RequestHandler = async (req, res, next) => {
   if (count === 0) return next(LTRes.msg('PLANT_NOT_FOUND'));
   else if (count < ids.length) return next(LTRes.msg('PLANT_MOVE_INCOMPLETE'));
   else res.send(LTRes.createCode(204));
-}
+};
 
 const getPhotos: RequestHandler = async (req, res, next) => {
   const plant = await prisma.plant.findUnique({
@@ -341,8 +341,22 @@ const remove: RequestHandler = async (req, res, next) => {
   else res.send(LTRes.createCode(204));
 };
 
-const getCount: RequestHandler = async (_req, res, _next) => {
-  const count = await prisma.plant.count();
+const getCount: RequestHandler = async (req, res, next) => {
+  let count: number = 0;
+
+  if (req.parser.userId) {
+    const user = await prisma.user.ltFind({ id: req.parser.userId });
+
+    if (!user) return next(LTRes.msg('USER_NOT_FOUND').setCode(404));
+    else if (!user.public) return next(LTRes.createCode(403));
+    else {
+      count = await prisma.plant.count({
+        where: { ownerId: req.parser.userId },
+      });
+    }
+  } else {
+    count = await prisma.plant.count({ where: { ownerId: req.auth.userId } });
+  }
 
   res.send({ count });
 };

@@ -1,10 +1,11 @@
 # Changelog
 
-## [1.0.7] - 2024-05-05
+## [1.0.7] - 2024-05-07
 
 ### Fixes
 
 - Fixed sorting by name incorrectly skipping plants.
+- Fixed plant count.
 
 ## [1.0.6] - 2024-05-03
 

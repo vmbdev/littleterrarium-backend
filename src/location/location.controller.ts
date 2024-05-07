@@ -89,10 +89,10 @@ const getPlantsCount: RequestHandler = async (req, res, next) => {
         select: { plants: true },
       },
     },
-    where: { id: req.parser.id },
+    where: { id: req.parser.id ?? req.auth.userId },
   });
 
-  if (!location) return next(LTRes.createCode(404));
+  if (!location) return next(LTRes.msg('LOCATION_NOT_FOUND').setCode(404))
   else {
     if (!location.public && location.ownerId !== req.auth.userId) {
       return next(LTRes.createCode(403));

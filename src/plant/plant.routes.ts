@@ -34,7 +34,7 @@ router.get(
   parser.number({ offset: false, limit: false }, 'query'),
   plant.find
 );
-router.get('/count', plant.getCount);
+router.get('/count', parser.number({ userId: false }, 'query'), plant.getCount);
 router.get('/:id', parser.number({ id: false }, 'params'), plant.findOne);
 router.get(
   '/:id/photos',
